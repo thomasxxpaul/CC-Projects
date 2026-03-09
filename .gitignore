@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.venv/
+
+# Sensitive / local files
+prices.db
+.serpapi_keys.json
+alerts.json
+
+# Node
+node_modules/

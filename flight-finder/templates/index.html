@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flight Deal Finder</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #F1F5F9; color: #0F172A; min-height: 100vh; }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+      height: 52px; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(30,58,138,0.35);
+    }
+    .header-brand { display: flex; align-items: center; gap: 9px; color: white; font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; }
+    .header-sub { font-size: 0.72rem; color: rgba(255,255,255,0.6); font-weight: 400; }
+
+    /* ── Search panel ── */
+    .search-panel { background: white; border-bottom: 1px solid #E2E8F0; padding: 14px 24px; }
+    .search-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.65rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.07em; }
+    .inp {
+      height: 38px; padding: 0 11px;
+      border: 1.5px solid #E2E8F0; border-radius: 9px;
+      font-size: 0.85rem; color: #0F172A; background: #F8FAFC;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .inp:focus { outline: none; border-color: #2563EB; background: white; }
+    select.inp {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 9px center;
+      padding-right: 26px; appearance: none; -webkit-appearance: none; cursor: pointer;
+    }
+    #searchBtn {
+      height: 38px; padding: 0 22px; border-radius: 9px; border: none;
+      background: #2563EB; color: white; font-weight: 700; font-size: 0.875rem;
+      cursor: pointer; transition: background 0.15s, transform 0.1s; white-space: nowrap;
+    }
+    #searchBtn:hover { background: #1D4ED8; }
+    #searchBtn:active { transform: scale(0.97); }
+    #searchBtn:disabled { background: #93C5FD; cursor: not-allowed; transform: none; }
+
+    /* ── Trip type toggle ── */
+    .trip-type-btn {
+      height: 38px; padding: 0 14px; border-radius: 9px;
+      border: 1.5px solid #E2E8F0; background: white;
+      font-size: 0.8rem; font-weight: 600; color: #475569;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    .trip-type-btn.active { background: #2563EB; border-color: #2563EB; color: white; }
+    .trip-type-btn:hover:not(.active) { border-color: #2563EB; color: #2563EB; }
+
+    /* ── Month pills ── */
+    .month-pill {
+      height: 38px; padding: 0 10px; border-radius: 9px;
+      border: 1.5px solid #E2E8F0; background: white;
+      font-size: 0.75rem; font-weight: 600; color: #475569;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    .month-pill:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+
+    /* ── API quota badge ── */
+    .quota-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.72rem; font-weight: 600; padding: 2px 8px;
+      border-radius: 99px; white-space: nowrap;
+    }
+    .quota-badge.cached { background: #F0FDF4; color: #15803D; }
+    .quota-badge.live   { background: #EFF6FF; color: #1D4ED8; }
+    .quota-badge.warn   { background: #FEF3C7; color: #92400E; }
+
+    /* ── Destination picker button ── */
+    #destPickerBtn {
+      height: 38px; padding: 0 14px; border-radius: 9px;
+      border: 1.5px solid #E2E8F0; background: white;
+      font-size: 0.82rem; font-weight: 600; color: #475569;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: all 0.12s; white-space: nowrap;
+    }
+    #destPickerBtn:hover { border-color: #2563EB; color: #2563EB; }
+    #destPickerBtn.open { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+    #destPickerBtn .dest-count {
+      background: #2563EB; color: white; border-radius: 99px;
+      font-size: 0.65rem; font-weight: 800; padding: 1px 6px; min-width: 18px; text-align: center;
+    }
+
+    /* ── Destination picker panel ── */
+    #destPanel {
+      background: white; border-bottom: 1px solid #E2E8F0;
+      padding: 16px 24px; display: none;
+    }
+    .dest-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .dest-panel-header span { font-size: 0.8rem; font-weight: 700; color: #475569; }
+    .dest-quick { display: flex; gap: 6px; }
+    .dest-quick button {
+      height: 26px; padding: 0 10px; border-radius: 6px; border: 1.5px solid #E2E8F0;
+      background: white; font-size: 0.72rem; font-weight: 600; color: #475569; cursor: pointer;
+    }
+    .dest-quick button:hover { border-color: #2563EB; color: #2563EB; }
+    .dest-regions { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px 24px; }
+    .dest-region-label { font-size: 0.65rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .dest-check-item { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; cursor: pointer; }
+    .dest-check-item input[type="checkbox"] { width: 15px; height: 15px; accent-color: #2563EB; cursor: pointer; flex-shrink: 0; }
+    .dest-check-item label { font-size: 0.8rem; font-weight: 600; color: #374151; cursor: pointer; }
+    .dest-check-item .dest-iata { font-size: 0.7rem; font-weight: 800; color: #2563EB; margin-right: 2px; }
+
+    /* ── Alert bar ── */
+    .alert-bar {
+      background: #FFFBEB; border-bottom: 1px solid #FDE68A;
+      padding: 9px 24px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.82rem;
+    }
+    .alert-bar label { font-weight: 600; color: #92400E; white-space: nowrap; }
+    .alert-inp { height: 30px; padding: 0 9px; border: 1.5px solid #FCD34D; border-radius: 7px; font-size: 0.82rem; background: white; }
+    .alert-inp[type="number"] { width: 68px; }
+    .alert-inp[type="email"]  { width: 185px; }
+    .alert-inp:focus { outline: none; border-color: #F59E0B; }
+    #alertBtn { height: 30px; padding: 0 12px; border-radius: 7px; border: none; background: #D97706; color: white; font-weight: 700; font-size: 0.78rem; cursor: pointer; }
+    #alertBtn:hover { background: #B45309; }
+    #alertStatus { font-size: 0.76rem; font-weight: 600; }
+    .anywhere-chip {
+      display:inline-flex;align-items:center;gap:4px;
+      height:22px;padding:0 8px;border-radius:99px;
+      background:#FEF3C7;border:1px solid #FCD34D;
+      font-size:0.7rem;font-weight:700;color:#92400E;cursor:pointer;
+    }
+    .anywhere-chip:hover { background:#FDE68A; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; background: white; border-bottom: 1px solid #E2E8F0;
+      padding: 0 24px; position: sticky; top: 52px; z-index: 90;
+    }
+    .tab { padding: 11px 18px; font-size: 0.84rem; font-weight: 600; color: #94A3B8; cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1px; transition: color 0.12s; }
+    .tab.active { color: #2563EB; border-bottom-color: #2563EB; }
+    .tab:hover:not(.active) { color: #475569; }
+    .tab-count { display: inline-flex; align-items: center; justify-content: center; background: #EFF6FF; color: #2563EB; border-radius: 99px; font-size: 0.65rem; font-weight: 800; min-width: 18px; height: 16px; padding: 0 5px; margin-left: 6px; }
+    .tab.active .tab-count { background: #2563EB; color: white; }
+
+    /* ── Status bar ── */
+    #statusBar { min-height: 36px; padding: 6px 24px; display: flex; align-items: center; gap: 8px; font-size: 0.81rem; color: #64748B; }
+    #statusBar.error { color: #DC2626; }
+    .progress-track { flex: 1; max-width: 180px; height: 3px; background: #E2E8F0; border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #2563EB; border-radius: 99px; animation: indeterminate 1.4s ease-in-out infinite; transform-origin: left; }
+    @keyframes indeterminate { 0%{transform:translateX(-100%) scaleX(.3)} 50%{transform:translateX(60%) scaleX(.6)} 100%{transform:translateX(200%) scaleX(.3)} }
+
+    /* ── Results toolbar ── */
+    .results-toolbar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 8px; padding: 6px 24px 4px;
+    }
+    .results-count { font-size: 0.82rem; color: #64748B; font-weight: 500; }
+    .results-count strong { color: #0F172A; font-weight: 700; }
+    .toolbar-filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      height: 30px; padding: 0 11px; border-radius: 99px;
+      border: 1.5px solid #E2E8F0; background: white;
+      font-size: 0.75rem; font-weight: 600; color: #475569;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap; user-select: none;
+    }
+    .chip:hover { border-color: #2563EB; color: #2563EB; }
+    .chip.on { background: #2563EB; border-color: #2563EB; color: white; }
+
+    select.chip-select {
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%2394A3B8' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+      padding-right: 22px; cursor: pointer;
+    }
+
+    /* ── Date pills ── */
+    .date-row {
+      display: flex; gap: 5px; align-items: center;
+      padding: 4px 24px 10px; overflow-x: auto; scrollbar-width: none;
+    }
+    .date-row::-webkit-scrollbar { display: none; }
+    .date-row-label { font-size: 0.65rem; font-weight: 700; color: #CBD5E1; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; margin-right: 4px; flex-shrink: 0; }
+    .dpill {
+      height: 28px; padding: 0 11px; border-radius: 99px;
+      border: 1.5px solid #E2E8F0; background: white;
+      font-size: 0.73rem; font-weight: 600; color: #475569;
+      cursor: pointer; white-space: nowrap; transition: all 0.12s; flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .dpill.active { background: #2563EB; border-color: #2563EB; color: white; }
+    .dpill:hover:not(.active) { border-color: #2563EB; color: #2563EB; }
+    .htag { font-size: 0.57rem; background: rgba(251,191,36,0.2); color: #92400E; border-radius: 99px; padding: 1px 4px; font-weight: 700; }
+    .dpill.active .htag { background: rgba(255,255,255,0.25); color: rgba(255,255,255,0.9); }
+
+    /* ── Cards ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 12px; padding: 0 24px 8px; }
+
+    .card {
+      background: white; border-radius: 16px; padding: 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      text-decoration: none; color: inherit;
+      border: 1.5px solid transparent;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      transition: box-shadow 0.18s, transform 0.15s, border-color 0.15s;
+      animation: fadeUp 0.28s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .card:hover { box-shadow: 0 8px 24px rgba(37,99,235,0.13), 0 2px 8px rgba(0,0,0,0.05); transform: translateY(-3px); border-color: #BFDBFE; }
+
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .card-route { display: flex; align-items: center; gap: 7px; }
+    .acode { font-size: 1.05rem; font-weight: 800; color: #1E3A8A; letter-spacing: -0.01em; }
+    .rarrow { color: #CBD5E1; font-size: 0.85rem; }
+    .hot { font-size: 0.58rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; background: linear-gradient(135deg,#F59E0B,#EF4444); color: white; padding: 3px 8px; border-radius: 99px; }
+    .cached-badge { font-size: 0.58rem; font-weight: 700; background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; padding: 2px 6px; border-radius: 99px; }
+
+    .card-dest { font-size: 0.98rem; font-weight: 700; }
+    .card-date { font-size: 0.76rem; color: #64748B; margin-top: -3px; }
+
+    .card-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .mchip { font-size: 0.7rem; font-weight: 600; background: #F1F5F9; color: #475569; padding: 2px 8px; border-radius: 6px; }
+    .mchip.ns { background: #DCFCE7; color: #15803D; }
+
+    .card-bottom { display: flex; align-items: flex-end; justify-content: space-between; }
+    .price { font-size: 1.65rem; font-weight: 900; color: #15803D; letter-spacing: -0.03em; line-height: 1; }
+    .price .pp { font-size: 0.67rem; font-weight: 500; color: #94A3B8; display: block; margin-top: 3px; }
+    .gf-link { font-size: 0.71rem; color: #2563EB; font-weight: 700; }
+
+    /* ── Sparkline ── */
+    .sparkline-wrap { min-height: 24px; }
+
+    /* ── Skeleton ── */
+    .skel-card { background: white; border-radius: 16px; padding: 18px; animation: pulse 1.5s ease-in-out infinite; }
+    .skel { background: #E2E8F0; border-radius: 6px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+    /* ── Pagination ── */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; padding: 16px 24px 32px; }
+    .pgbtn {
+      min-width: 34px; height: 34px; border-radius: 9px;
+      border: 1.5px solid #E2E8F0; background: white;
+      font-size: 0.8rem; font-weight: 700; color: #475569;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s; padding: 0 6px;
+    }
+    .pgbtn:hover:not(:disabled):not(.cur) { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+    .pgbtn.cur { background: #2563EB; border-color: #2563EB; color: white; }
+    .pgbtn:disabled { opacity: 0.3; cursor: default; }
+    .pgdots { color: #CBD5E1; font-size: 0.8rem; padding: 0 2px; }
+
+    /* ── Best Day ── */
+    #bestDayView { padding: 4px 24px 32px; }
+    .bd-intro { font-size: 0.76rem; color: #94A3B8; margin-bottom: 14px; }
+    .day-row {
+      display: flex; align-items: center; gap: 14px;
+      background: white; border-radius: 13px; padding: 13px 18px;
+      margin-bottom: 7px; border: 1.5px solid transparent;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .day-row:hover { box-shadow: 0 4px 14px rgba(37,99,235,0.1); transform: translateX(3px); border-color: #BFDBFE; }
+    .day-rank { font-size: 0.7rem; font-weight: 800; color: #CBD5E1; width: 22px; flex-shrink: 0; }
+    .day-date { font-size: 0.88rem; font-weight: 700; width: 82px; flex-shrink: 0; }
+    .day-bar-wrap { flex: 1; background: #F1F5F9; border-radius: 99px; height: 7px; overflow: hidden; }
+    .day-bar { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+    .day-price { font-size: 1rem; font-weight: 800; width: 60px; text-align: right; flex-shrink: 0; }
+    .day-route { font-size: 0.7rem; color: #94A3B8; width: 100px; text-align: right; flex-shrink: 0; }
+
+    .no-results { grid-column: 1/-1; text-align: center; padding: 64px 0; color: #94A3B8; }
+    .no-results h3 { font-size: 1rem; color: #CBD5E1; margin-bottom: 6px; }
+
+    .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #BFDBFE; border-top-color: #2563EB; border-radius: 50%; animation: spin .65s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .divider { width: 1px; height: 20px; background: #E2E8F0; flex-shrink: 0; }
+
+    /* ── API key panel ── */
+    #keyBtn {
+      display: flex; align-items: center; gap: 6px;
+      height: 30px; padding: 0 12px; border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.1);
+      color: white; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      transition: background 0.12s;
+    }
+    #keyBtn:hover { background: rgba(255,255,255,0.2); }
+    #keyBtn .key-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    #keyPanel {
+      display: none; position: absolute; top: 52px; right: 0;
+      background: white; border: 1.5px solid #E2E8F0; border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 18px 20px;
+      width: 320px; z-index: 200;
+    }
+    #keyPanel h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; }
+    .key-option {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; border-radius: 9px; border: 1.5px solid #E2E8F0;
+      margin-bottom: 6px; cursor: pointer; transition: all 0.12s;
+    }
+    .key-option:hover { border-color: #93C5FD; background: #F8FAFC; }
+    .key-option.active { border-color: #2563EB; background: #EFF6FF; }
+    .key-option-dot { width: 8px; height: 8px; border-radius: 50%; background: #CBD5E1; flex-shrink: 0; }
+    .key-option.active .key-option-dot { background: #22C55E; }
+    .key-option-name { font-size: 0.82rem; font-weight: 700; flex: 1; }
+    .key-option-masked { font-size: 0.72rem; color: #94A3B8; font-family: monospace; }
+    .key-option-del { font-size: 0.75rem; color: #CBD5E1; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+    .key-option-del:hover { color: #EF4444; background: #FEF2F2; }
+    .alert-tag {
+      font-size: 0.62rem; font-weight: 700; padding: 1px 6px; border-radius: 99px;
+      background: #FEF3C7; color: #92400E; cursor: pointer; white-space: nowrap;
+    }
+    .alert-tag:hover { background: #FDE68A; }
+    .alert-tag.set { background: #D97706; color: white; }
+    .key-add-row { display: flex; gap: 5px; margin-top: 10px; border-top: 1px solid #F1F5F9; padding-top: 10px; }
+    .key-add-row input {
+      flex: 1; height: 32px; padding: 0 9px; border-radius: 7px;
+      border: 1.5px solid #E2E8F0; font-size: 0.78rem; font-family: monospace;
+    }
+    .key-add-row input:focus { outline: none; border-color: #2563EB; }
+    .key-add-row input.name-inp { max-width: 80px; font-family: inherit; }
+    .key-add-btn {
+      height: 32px; padding: 0 12px; border-radius: 7px; border: none;
+      background: #2563EB; color: white; font-weight: 700; font-size: 0.78rem; cursor: pointer;
+    }
+    #keyMsg { font-size: 0.73rem; font-weight: 600; margin-top: 6px; min-height: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header" style="position:relative">
+  <div class="header-brand">&#9992; Flight Deal Finder</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="header-sub">Weekends &amp; holidays · SJC / SFO</span>
+    <button id="keyBtn" onclick="toggleKeyPanel()">
+      <span class="key-dot" id="keyDot" style="background:#EF4444"></span>
+      <span id="keyLabel">No API key</span>
+    </button>
+  </div>
+  <div id="keyPanel">
+    <h4>SerpAPI Keys</h4>
+    <div id="keyList"></div>
+    <div class="key-add-row">
+      <input class="name-inp" id="keyNameInput" placeholder="Name" autocomplete="off" />
+      <input type="password" id="keyValueInput" placeholder="Paste key…" autocomplete="off" />
+      <button class="key-add-btn" onclick="addKey()">Add</button>
+    </div>
+
+    <div style="border-top:1px solid #F1F5F9;margin-top:12px;padding-top:12px">
+      <div style="font-size:0.85rem;font-weight:700;margin-bottom:8px">
+        Alert Email <span id="emailSetBadge" style="display:none;font-size:0.65rem;font-weight:700;background:#F0FDF4;color:#15803D;padding:1px 7px;border-radius:99px;margin-left:4px">configured</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <input type="email" id="emailFrom" placeholder="Gmail address (sender)" autocomplete="off"
+          style="height:32px;padding:0 9px;border-radius:7px;border:1.5px solid #E2E8F0;font-size:0.78rem;" />
+        <div style="display:flex;gap:5px">
+          <input type="password" id="emailPass" placeholder="Gmail app password" autocomplete="off"
+            style="flex:1;height:32px;padding:0 9px;border-radius:7px;border:1.5px solid #E2E8F0;font-size:0.78rem;" />
+          <button class="key-add-btn" onclick="saveEmailConfig()">Save</button>
+        </div>
+        <span style="font-size:0.68rem;color:#94A3B8">Use a <strong>Gmail App Password</strong> — myaccount.google.com → Security → App passwords</span>
+      </div>
+    </div>
+    <div id="keyMsg"></div>
+  </div>
+</header>
+
+<!-- Search -->
+<div class="search-panel">
+  <div class="search-row">
+    <div class="field">
+      <label>From</label>
+      <select id="originFilter" class="inp" style="width:130px">
+        <option value="ALL">SJC + SFO</option>
+        <option value="SJC">SJC (San Jose)</option>
+        <option value="SFO">SFO (San Francisco)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Depart after</label>
+      <div style="display:flex;gap:5px;align-items:center">
+        <input type="date" id="dateFrom" class="inp" value="2026-03-25" />
+        <div style="display:flex;gap:3px">
+          <button class="month-pill" onclick="setMonth(0)">This mo</button>
+          <button class="month-pill" onclick="setMonth(1)">Next mo</button>
+          <button class="month-pill" onclick="setMonth(2)">+2 mo</button>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Depart before</label>
+      <input type="date" id="dateTo" class="inp" value="2026-03-31" />
+    </div>
+    <div class="field">
+      <label>Trip type</label>
+      <div style="display:flex;gap:4px">
+        <button class="trip-type-btn active" id="btnOneWay" onclick="setTripType('oneway')">One way</button>
+        <button class="trip-type-btn" id="btnRoundTrip" onclick="setTripType('roundtrip')">Round trip</button>
+      </div>
+    </div>
+    <div class="field" id="returnField" style="display:none">
+      <label>Return</label>
+      <div style="display:flex;gap:5px;align-items:center">
+        <input type="date" id="returnDate" class="inp" />
+        <div style="display:flex;gap:3px">
+          <button class="month-pill" onclick="setReturnOffset(2)" title="+2 days">+2d</button>
+          <button class="month-pill" onclick="setReturnOffset(3)" title="+3 days">+3d</button>
+          <button class="month-pill" onclick="setReturnOffset(7)" title="+1 week">+7d</button>
+        </div>
+      </div>
+    </div>
+    <button id="destPickerBtn" onclick="toggleDestPanel()">
+      Destinations <span class="dest-count" id="destCount">19</span>
+    </button>
+    <div style="display:flex;flex-direction:column;gap:3px;justify-content:flex-end">
+      <button id="searchBtn" onclick="loadDeals()">Search Deals</button>
+      <div id="callEstimate" style="min-height:18px;text-align:center"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Destination picker panel -->
+<div id="destPanel">
+  <div class="dest-panel-header">
+    <span>Pick which destinations to search</span>
+    <div class="dest-quick">
+      <button onclick="selectAllDests()">Select all</button>
+      <button onclick="clearDests()">Clear</button>
+    </div>
+  </div>
+  <div class="dest-regions" id="destRegions"></div>
+</div>
+
+<!-- Alert bar -->
+<div class="alert-bar">
+  <label>Alert me if any deal drops below $</label>
+  <input type="number" id="alertThreshold" class="alert-inp" value="150" min="1" max="9999" />
+  <label>to</label>
+  <div style="position:relative">
+    <select id="alertDest" class="alert-inp" onchange="toggleAnywherNote()" style="width:auto;padding:0 22px 0 9px;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%279%27 height=%276%27 viewBox=%270 0 9 6%27%3E%3Cpath d=%27M1 1l3.5 3.5L8 1%27 stroke=%27%2394A3B8%27 stroke-width=%271.4%27 fill=%27none%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 6px center;cursor:pointer">
+      <option value="ALL">Anywhere</option>
+    </select>
+  </div>
+  <label>— email</label>
+  <input type="email" id="alertEmail" class="alert-inp" placeholder="you@email.com" />
+  <button id="alertBtn" onclick="setAlert()">Set Alert</button>
+  <span id="alertStatus"></span>
+</div>
+<div id="anywhereNote" style="background:#FFFBEB;border-bottom:1px solid #FDE68A;padding:8px 24px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <span style="font-size:0.72rem;color:#92400E;font-weight:600">Anywhere watches:</span>
+  <div id="anywhereChips" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+  <span style="font-size:0.7rem;color:#B45309">click to remove · </span>
+  <select id="anywhereAdd" onchange="addAnywhereDestination(this)" style="height:24px;padding:0 6px;border-radius:6px;border:1.5px solid #FCD34D;background:white;font-size:0.72rem;color:#92400E;cursor:pointer">
+    <option value="">+ add</option>
+  </select>
+</div>
+
+<!-- Tabs -->
+<div class="tabs" id="tabs" style="display:none">
+  <div class="tab active" onclick="switchTab('deals')">Deals <span class="tab-count" id="dealCount">0</span></div>
+  <div class="tab" onclick="switchTab('bestday')">Best Day to Fly</div>
+</div>
+
+<!-- Deals view -->
+<div id="dealsView">
+  <div class="results-toolbar" id="resultsToolbar" style="display:none">
+    <span class="results-count" id="resultsCount"></span>
+    <div class="toolbar-filters">
+      <button class="chip" id="nonstopChip" onclick="toggleNonstop()">Nonstop only</button>
+      <div class="divider"></div>
+      <select class="chip chip-select" id="sortSelect" onchange="currentPage=0;renderDeals()">
+        <option value="price">Sort: Cheapest</option>
+        <option value="duration">Sort: Shortest</option>
+        <option value="stops">Sort: Fewest stops</option>
+      </select>
+      <select class="chip chip-select" id="destFilter" onchange="currentPage=0;renderDeals()">
+        <option value="ALL">To: Anywhere</option>
+      </select>
+      <select class="chip chip-select" id="maxPrice" onchange="currentPage=0;renderDeals()">
+        <option value="9999">Any price</option>
+        <option value="100">Under $100</option>
+        <option value="150">Under $150</option>
+        <option value="200">Under $200</option>
+        <option value="300">Under $300</option>
+        <option value="500">Under $500</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="date-row" id="dateRow" style="display:none"></div>
+  <div id="statusBar"></div>
+  <div class="grid" id="grid"></div>
+  <div class="pagination" id="pagination" style="display:none"></div>
+</div>
+
+<!-- Best Day view -->
+<div id="bestDayView" style="display:none"></div>
+
+<script>
+  // ── Data from server ───────────────────────────────────────────────────────
+  const ALL_DESTINATIONS = {{ all_destinations | tojson }};
+
+  const REGIONS = {
+    "West Coast":        ["LAX","LAS","SEA","PDX","PHX","SAN","SLC"],
+    "Mountain & Central":["DEN","ORD","AUS","MSY"],
+    "East Coast":        ["JFK","BOS","MIA","ATL","MCO","BNA"],
+    "Hawaii":            ["HNL","OGG"],
+  };
+
+  // Default search selection — quota-friendly 8
+  const DEFAULT_SEARCH_DESTS = new Set(["LAX","LAS","SEA","DEN","JFK","MIA","PHX","SAN"]);
+
+  const HOLIDAYS = new Set([
+    "2025-11-27","2025-11-28","2025-12-24","2025-12-25","2025-12-31",
+    "2026-01-01","2026-01-19","2026-02-16","2026-05-25","2026-07-03",
+    "2026-09-07","2026-10-12","2026-11-11","2026-11-26","2026-11-27",
+    "2026-12-24","2026-12-25","2026-12-31","2027-01-01",
+  ]);
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let allDeals    = [];
+  let currentPage = 0;
+  let activeTab   = "deals";
+  let nonstopOnly = false;
+  let activeSource = null;
+  const PAGE_SIZE  = 12;
+
+  // ── Destination picker ─────────────────────────────────────────────────────
+  const LS_KEY = "flightfinder_destinations";
+
+  function loadSelectedDests() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_KEY));
+      if (Array.isArray(saved) && saved.length) return new Set(saved);
+    } catch {}
+    return new Set(DEFAULT_SEARCH_DESTS);
+  }
+
+  function saveSelectedDests(set) {
+    localStorage.setItem(LS_KEY, JSON.stringify([...set]));
+  }
+
+  let selectedDests = loadSelectedDests();
+
+  function buildDestPanel() {
+    const container = document.getElementById("destRegions");
+    container.innerHTML = "";
+    for (const [region, codes] of Object.entries(REGIONS)) {
+      const col = document.createElement("div");
+      col.innerHTML = `<div class="dest-region-label">${region}</div>`;
+      for (const code of codes) {
+        if (!ALL_DESTINATIONS[code]) continue;
+        const item = document.createElement("label");
+        item.className = "dest-check-item";
+        item.innerHTML = `
+          <input type="checkbox" value="${code}" ${selectedDests.has(code) ? "checked" : ""} onchange="onDestChange(this)" />
+          <label><span class="dest-iata">${code}</span> ${ALL_DESTINATIONS[code]}</label>`;
+        col.appendChild(item);
+      }
+      container.appendChild(col);
+    }
+    updateDestCount();
+  }
+
+  function onDestChange(cb) {
+    if (cb.checked) selectedDests.add(cb.value);
+    else selectedDests.delete(cb.value);
+    saveSelectedDests(selectedDests);
+    updateDestCount();
+    updateCallEstimate();
+  }
+
+  function selectAllDests() {
+    selectedDests = new Set(Object.keys(ALL_DESTINATIONS));
+    saveSelectedDests(selectedDests);
+    document.querySelectorAll("#destRegions input[type=checkbox]").forEach(cb => cb.checked = true);
+    updateDestCount();
+  }
+
+  function clearDests() {
+    selectedDests = new Set();
+    saveSelectedDests(selectedDests);
+    document.querySelectorAll("#destRegions input[type=checkbox]").forEach(cb => cb.checked = false);
+    updateDestCount();
+  }
+
+  function updateDestCount() {
+    document.getElementById("destCount").textContent = selectedDests.size;
+  }
+
+  function toggleDestPanel() {
+    const panel = document.getElementById("destPanel");
+    const btn   = document.getElementById("destPickerBtn");
+    const open  = panel.style.display === "none" || panel.style.display === "";
+    panel.style.display = open ? "block" : "none";
+    btn.classList.toggle("open", open);
+  }
+
+  // Build panel on load
+  buildDestPanel();
+
+  // Populate alert destination dropdown
+  const alertDestEl = document.getElementById("alertDest");
+  Object.entries(ALL_DESTINATIONS).forEach(([code, name]) => {
+    const opt = document.createElement("option");
+    opt.value = code; opt.textContent = `${code} — ${name}`;
+    alertDestEl.appendChild(opt);
+  });
+
+  // ── Anywhere destinations ──────────────────────────────────────────────────
+  const AW_KEY = "flightfinder_anywhere";
+  const DEFAULT_ANYWHERE = ["LAX","LAS","SEA","DEN","JFK","MIA","PHX","SAN"];
+
+  function loadAnywhere() {
+    try {
+      const s = JSON.parse(localStorage.getItem(AW_KEY));
+      if (Array.isArray(s) && s.length) return s;
+    } catch {}
+    return [...DEFAULT_ANYWHERE];
+  }
+
+  function saveAnywhere(list) { localStorage.setItem(AW_KEY, JSON.stringify(list)); }
+
+  let anywhereDestinations = loadAnywhere();
+
+  function renderAnywhereChips() {
+    const el = document.getElementById("anywhereChips");
+    el.innerHTML = anywhereDestinations.map(code =>
+      `<span class="anywhere-chip" onclick="removeAnywhereDestination('${code}')" title="Click to remove">
+        ${code} <span style="opacity:0.5">✕</span>
+      </span>`
+    ).join("");
+
+    // Populate the "add" dropdown with destinations not already in the list
+    const addSel = document.getElementById("anywhereAdd");
+    addSel.innerHTML = '<option value="">+ add</option>' +
+      Object.entries(ALL_DESTINATIONS)
+        .filter(([code]) => !anywhereDestinations.includes(code))
+        .map(([code, name]) => `<option value="${code}">${code} — ${name}</option>`)
+        .join("");
+  }
+
+  function removeAnywhereDestination(code) {
+    anywhereDestinations = anywhereDestinations.filter(c => c !== code);
+    saveAnywhere(anywhereDestinations);
+    renderAnywhereChips();
+  }
+
+  function addAnywhereDestination(sel) {
+    const code = sel.value;
+    if (!code) return;
+    if (!anywhereDestinations.includes(code)) {
+      anywhereDestinations.push(code);
+      saveAnywhere(anywhereDestinations);
+    }
+    renderAnywhereChips();
+  }
+
+  function toggleAnywherNote() {
+    document.getElementById("anywhereNote").style.display =
+      document.getElementById("alertDest").value === "ALL" ? "flex" : "none";
+  }
+
+  renderAnywhereChips();
+  toggleAnywherNote();
+
+  // ── Google Flights URL ─────────────────────────────────────────────────────
+  function gfUrl(o, d, dep, ret) {
+    const out = `${o}.${d}.${dep}`;
+    const r   = ret ? `*${d}.${o}.${ret}` : "";
+    return `https://www.google.com/flights#flt=${out}${r};c:USD;e:1;sd:1`;
+  }
+
+  // ── Load / Stream deals ────────────────────────────────────────────────────
+  function loadDeals() {
+    const btn      = document.getElementById("searchBtn");
+    const dateFrom = document.getElementById("dateFrom").value;
+    const dateTo   = document.getElementById("dateTo").value;
+    const retDate  = document.getElementById("returnDate").value;
+
+    if (!dateFrom || !dateTo || dateFrom > dateTo) {
+      setStatus("Please enter a valid date range.", true); return;
+    }
+    if (selectedDests.size === 0) {
+      setStatus("Select at least one destination.", true); return;
+    }
+    if (activeSource) { activeSource.close(); activeSource = null; }
+
+    btn.disabled = true;
+    setStatus('<span class="spinner"></span><span>Searching — deals will appear as they load</span><div class="progress-track"><div class="progress-fill"></div></div>');
+    document.getElementById("grid").innerHTML = skeletons(6);
+    document.getElementById("bestDayView").innerHTML = "";
+    document.getElementById("tabs").style.display = "none";
+    document.getElementById("resultsToolbar").style.display = "none";
+    document.getElementById("dateRow").style.display = "none";
+    document.getElementById("pagination").style.display = "none";
+
+    const dealsMap = {};
+    allDeals = []; currentPage = 0;
+    let renderTimer = null;
+
+    function scheduleRender() {
+      if (renderTimer) return;
+      renderTimer = setTimeout(() => {
+        renderTimer = null;
+        allDeals = Object.values(dealsMap).sort(sortFn());
+        const c = allDeals.length;
+        setStatus(`<span class="spinner"></span><span>Found <strong>${c}</strong> deal${c!==1?"s":""} so far…</span><div class="progress-track"><div class="progress-fill"></div></div>`);
+        if (c > 0) showResults();
+      }, 280);
+    }
+
+    const params = new URLSearchParams({
+      dateFrom, dateTo,
+      destinations: [...selectedDests].join(","),
+      ...(retDate && { returnDate: retDate })
+    });
+    const src = new EventSource("/api/search/stream?" + params);
+    activeSource = src;
+
+    src.onmessage = (e) => {
+      const deal = JSON.parse(e.data);
+      if (deal.error) { setStatus("Error: " + deal.error, true); src.close(); activeSource = null; btn.disabled = false; return; }
+      const key = `${deal.origin}|${deal.destination}|${deal.departDate}`;
+      if (!dealsMap[key] || deal.price < dealsMap[key].price) { dealsMap[key] = deal; scheduleRender(); }
+    };
+
+    src.addEventListener("apicalls", (e) => {
+      const { cached, live } = JSON.parse(e.data);
+      const parts = [];
+      if (cached > 0) parts.push(`<span class="quota-badge cached">${cached} cached</span>`);
+      if (live   > 0) parts.push(`<span class="quota-badge live">${live} live API call${live!==1?"s":""}</span>`);
+      if (live === 0 && cached > 0) parts.push(`<span style="color:#94A3B8;font-size:0.75rem">0 quota used</span>`);
+      setStatus(`<span class="spinner"></span><span>Searching…</span><div class="progress-track"><div class="progress-fill"></div></div>${parts.join(" ")}`);
+    });
+
+    src.addEventListener("done", () => {
+      src.close(); activeSource = null;
+      if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
+      allDeals = Object.values(dealsMap).sort(sortFn());
+      const c = allDeals.length;
+      if (c === 0) {
+        setStatus("No deals found. Try expanding your date range or destinations.");
+        document.getElementById("grid").innerHTML = "";
+      } else {
+        const days = uniqueDates(allDeals).length;
+        const ts = new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+        setStatus(`Found <strong>${c} deals</strong> across ${days} day${days!==1?"s":""} &nbsp;·&nbsp; <span style="color:#94A3B8">as of ${ts}</span>`);
+        showResults();
+      }
+      btn.disabled = false;
+    });
+
+    src.onerror = () => {
+      src.close(); activeSource = null;
+      if (allDeals.length === 0) setStatus("Search failed. Please try again.", true);
+      else setStatus(`Found <strong>${allDeals.length} deals</strong>.`);
+      btn.disabled = false;
+    };
+  }
+
+  function showResults() {
+    document.getElementById("tabs").style.display = "flex";
+    document.getElementById("dealCount").textContent = allDeals.length;
+    document.getElementById("resultsToolbar").style.display = "flex";
+    updateDestFilter();
+    buildDatePills();
+    renderDeals();
+    renderBestDay();
+    if (activeTab === "bestday") {
+      document.getElementById("dealsView").style.display = "none";
+      document.getElementById("bestDayView").style.display = "";
+    }
+  }
+
+  // ── Sorting ────────────────────────────────────────────────────────────────
+  function sortFn() {
+    const s = document.getElementById("sortSelect") ? document.getElementById("sortSelect").value : "price";
+    if (s === "duration") return (a, b) => durMins(a.duration) - durMins(b.duration);
+    if (s === "stops")    return (a, b) => a.stops - b.stops || a.price - b.price;
+    return (a, b) => a.price - b.price;
+  }
+  function durMins(str) {
+    if (!str) return 9999;
+    const m = str.match(/(\d+)h(?:\s*(\d+)m)?/);
+    return m ? +m[1] * 60 + (+m[2] || 0) : 9999;
+  }
+
+  // ── Filters ────────────────────────────────────────────────────────────────
+  function toggleNonstop() {
+    nonstopOnly = !nonstopOnly;
+    document.getElementById("nonstopChip").classList.toggle("on", nonstopOnly);
+    currentPage = 0; renderDeals();
+  }
+
+  function filtered() {
+    const origin   = document.getElementById("originFilter").value;
+    const maxPrice = parseFloat(document.getElementById("maxPrice").value);
+    const dest     = document.getElementById("destFilter").value;
+    const selDates = getSelectedDates();
+    return allDeals
+      .filter(d =>
+        (origin === "ALL" || d.origin === origin) &&
+        (dest === "ALL" || d.destination === dest) &&
+        d.price <= maxPrice &&
+        (!nonstopOnly || d.stops === 0) &&
+        (selDates === null || selDates.includes(d.departDate))
+      )
+      .sort(sortFn());
+  }
+
+  function updateDestFilter() {
+    const sel = document.getElementById("destFilter");
+    const cur = sel.value;
+    const dests = [...new Set(allDeals.map(d => d.destination))].sort();
+    sel.innerHTML = '<option value="ALL">To: Anywhere</option>' +
+      dests.map(d => `<option value="${d}">${d} — ${ALL_DESTINATIONS[d]||d}</option>`).join("");
+    if (dests.includes(cur)) sel.value = cur;
+  }
+
+  // ── Date pills ─────────────────────────────────────────────────────────────
+  function uniqueDates(deals) { return [...new Set(deals.map(d => d.departDate))].sort(); }
+
+  function buildDatePills() {
+    const row = document.getElementById("dateRow");
+    const dates = uniqueDates(allDeals);
+    row.innerHTML = '<span class="date-row-label">Date</span>';
+    row.appendChild(mkPill("All dates", "ALL", true, false));
+    dates.forEach(d => row.appendChild(mkPill(fmtDate(d), d, false, isHolidayWeekday(d))));
+    row.style.display = "flex";
+  }
+
+  function isHolidayWeekday(iso) {
+    const day = new Date(iso + "T00:00:00").getDay();
+    return day >= 1 && day <= 4 && HOLIDAYS.has(iso);
+  }
+
+  function mkPill(label, val, active, holiday) {
+    const b = document.createElement("button");
+    b.className = "dpill" + (active ? " active" : "");
+    b.dataset.date = val;
+    b.textContent = label;
+    if (holiday) {
+      const t = document.createElement("span");
+      t.className = "htag"; t.textContent = "holiday";
+      b.appendChild(t);
+    }
+    b.onclick = () => togglePill(b);
+    return b;
+  }
+
+  function togglePill(btn) {
+    const allBtn = document.querySelector('.dpill[data-date="ALL"]');
+    if (btn.dataset.date === "ALL") {
+      document.querySelectorAll(".dpill").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    } else {
+      allBtn.classList.remove("active");
+      btn.classList.toggle("active");
+      if (![...document.querySelectorAll('.dpill:not([data-date="ALL"])')].some(b => b.classList.contains("active")))
+        allBtn.classList.add("active");
+    }
+    currentPage = 0; renderDeals();
+  }
+
+  function getSelectedDates() {
+    const allBtn = document.querySelector('.dpill[data-date="ALL"]');
+    if (!allBtn || allBtn.classList.contains("active")) return null;
+    return [...document.querySelectorAll('.dpill:not([data-date="ALL"])')].filter(b => b.classList.contains("active")).map(b => b.dataset.date);
+  }
+
+  // ── Deals grid ─────────────────────────────────────────────────────────────
+  function renderDeals() {
+    const grid = document.getElementById("grid");
+    const f    = filtered();
+    const total = f.length;
+    const pages = Math.ceil(total / PAGE_SIZE);
+    if (currentPage >= pages) currentPage = 0;
+
+    document.getElementById("resultsCount").innerHTML =
+      total === 0 ? "No deals match your filters"
+      : `Showing <strong>${Math.min((currentPage+1)*PAGE_SIZE, total)} of ${total}</strong> deal${total!==1?"s":""}`;
+
+    if (total === 0) {
+      grid.innerHTML = '<div class="no-results"><h3>No results</h3><p>Try adjusting your filters</p></div>';
+      document.getElementById("pagination").style.display = "none";
+      return;
+    }
+
+    const page = f.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+    grid.innerHTML = page.map((d, i) => {
+      const dest   = ALL_DESTINATIONS[d.destination] || d.destination;
+      const stops  = d.stops === 0 ? "Nonstop" : d.stops === 1 ? "1 stop" : `${d.stops} stops`;
+      const ret    = d.returnDate ? ` · Return ${fmtDate(d.returnDate)}` : "";
+      const hot    = d.price < 120 ? '<span class="hot">Hot deal</span>' : "";
+      const cached = d.cached ? '<span class="cached-badge">Cached</span>' : "";
+      const nsClass = d.stops === 0 ? " ns" : "";
+      return `<a class="card" href="${gfUrl(d.origin, d.destination, d.departDate, d.returnDate)}" target="_blank" rel="noopener" style="animation-delay:${i*0.04}s">
+        <div class="card-top">
+          <div class="card-route">
+            <span class="acode">${d.origin}</span>
+            <span class="rarrow">&#9992;</span>
+            <span class="acode">${d.destination}</span>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center">${hot}${cached}</div>
+        </div>
+        <div>
+          <div class="card-dest">${dest}</div>
+          <div class="card-date">Depart ${fmtDate(d.departDate)}${ret}</div>
+        </div>
+        <div class="card-chips">
+          <span class="mchip${nsClass}">${stops}</span>
+          ${d.duration ? `<span class="mchip">${d.duration}</span>` : ""}
+        </div>
+        <div class="card-bottom">
+          <div class="price">$${d.price.toFixed(0)}<span class="pp">per person · ${d.fetchedAt||"today"}</span></div>
+          <span class="gf-link">Book &#8599;</span>
+        </div>
+        <div class="sparkline-wrap"
+          data-origin="${d.origin}" data-dest="${d.destination}"
+          data-date="${d.departDate}" data-ret="${d.returnDate||""}"></div>
+      </a>`;
+    }).join("");
+
+    renderPagination(pages);
+    // Load sparklines after cards are in the DOM
+    loadSparklines();
+  }
+
+  function renderPagination(pages) {
+    const pag = document.getElementById("pagination");
+    if (pages <= 1) { pag.style.display = "none"; return; }
+    pag.style.display = "flex";
+    const btns = [];
+    btns.push(`<button class="pgbtn" onclick="changePage(-1)" ${currentPage===0?"disabled":""}>&#8592;</button>`);
+    const range = pageRange(currentPage, pages);
+    let prev = null;
+    for (const p of range) {
+      if (prev !== null && p - prev > 1) btns.push('<span class="pgdots">…</span>');
+      btns.push(`<button class="pgbtn${p===currentPage?" cur":""}" onclick="goPage(${p})">${p+1}</button>`);
+      prev = p;
+    }
+    btns.push(`<button class="pgbtn" onclick="changePage(1)" ${currentPage>=pages-1?"disabled":""}>&#8594;</button>`);
+    pag.innerHTML = btns.join("");
+  }
+
+  function pageRange(cur, total) {
+    const s = new Set([0, total-1, cur, cur-1, cur+1].filter(p => p >= 0 && p < total));
+    return [...s].sort((a,b)=>a-b);
+  }
+
+  function changePage(dir) { currentPage += dir; renderDeals(); window.scrollTo({top:0,behavior:"smooth"}); }
+  function goPage(p) { currentPage = p; renderDeals(); window.scrollTo({top:0,behavior:"smooth"}); }
+
+  // ── Sparklines ─────────────────────────────────────────────────────────────
+  async function loadSparklines() {
+    const wraps = document.querySelectorAll(".sparkline-wrap");
+    if (!wraps.length) return;
+    await Promise.all([...wraps].map(async wrap => {
+      const { origin, dest, date: depDate, ret } = wrap.dataset;
+      try {
+        const p = new URLSearchParams({ origin, destination: dest, departDate: depDate, returnDate: ret || "" });
+        const history = await (await fetch("/api/price-history?" + p)).json();
+        if (history.length < 2) return;
+
+        const prices = history.map(h => h.price);
+        const first  = prices[0];
+        const last   = prices[prices.length - 1];
+        const diff   = last - first;
+        const arrow  = diff <= -1 ? "↓" : diff >= 1 ? "↑" : "→";
+        const color  = diff <= -1 ? "#15803D" : diff >= 1 ? "#DC2626" : "#94A3B8";
+        const label  = Math.abs(diff) >= 1
+          ? `${arrow} $${Math.abs(diff).toFixed(0)} since ${history[0].date}`
+          : `${arrow} Stable`;
+
+        wrap.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;border-top:1px solid #F1F5F9;padding-top:8px;margin-top:2px">
+            ${sparklineSVG(prices)}
+            <span style="font-size:0.65rem;font-weight:700;color:${color}">${label}</span>
+          </div>`;
+      } catch {}
+    }));
+  }
+
+  function sparklineSVG(prices, w=72, h=22) {
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const range = max - min || 1;
+    const pts = prices.map((p, i) => {
+      const x = (i / (prices.length - 1)) * (w - 4) + 2;
+      const y = h - 2 - ((p - min) / range) * (h - 6);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    const last = pts.split(" ").pop().split(",");
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none">
+      <polyline points="${pts}" stroke="#CBD5E1" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${last[0]}" cy="${last[1]}" r="2.5" fill="#2563EB"/>
+    </svg>`;
+  }
+
+  // ── Best Day ───────────────────────────────────────────────────────────────
+  function renderBestDay() {
+    const el = document.getElementById("bestDayView");
+    const dates = uniqueDates(allDeals);
+    const byDay = dates.map(d => {
+      const best = allDeals.filter(x => x.departDate === d).reduce((a,b) => a.price < b.price ? a : b);
+      return { date: d, price: best.price, deal: best };
+    }).sort((a,b) => a.price - b.price);
+
+    const maxP = Math.max(...byDay.map(d => d.price));
+    const minP = Math.min(...byDay.map(d => d.price));
+    function color(p) {
+      const r = (p - minP) / (maxP - minP || 1);
+      return r < 0.33 ? "#22C55E" : r < 0.66 ? "#F59E0B" : "#EF4444";
+    }
+
+    el.innerHTML = `<p class="bd-intro">Cheapest day = best deal across all routes. Click a day to filter the Deals tab.</p>` +
+      byDay.map((row, i) => {
+        const pct = ((row.price - minP) / (maxP - minP || 1) * 75 + 12).toFixed(1);
+        return `<div class="day-row" onclick="jumpToDate('${row.date}')">
+          <div class="day-rank">#${i+1}</div>
+          <div class="day-date">${fmtDate(row.date)}</div>
+          <div class="day-bar-wrap"><div class="day-bar" style="width:${pct}%;background:${color(row.price)}"></div></div>
+          <div class="day-price" style="color:${color(row.price)}">$${row.price.toFixed(0)}</div>
+          <div class="day-route">${row.deal.origin} → ${row.deal.destination}</div>
+        </div>`;
+      }).join("");
+  }
+
+  function jumpToDate(date) {
+    switchTab("deals");
+    document.querySelectorAll(".dpill").forEach(b => b.classList.remove("active"));
+    const p = document.querySelector(`.dpill[data-date="${date}"]`);
+    if (p) p.classList.add("active"); else document.querySelector('.dpill[data-date="ALL"]').classList.add("active");
+    currentPage = 0; renderDeals();
+  }
+
+  // ── Tabs ───────────────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll(".tab").forEach((t, i) =>
+      t.classList.toggle("active", (i===0 && tab==="deals") || (i===1 && tab==="bestday")));
+    document.getElementById("dealsView").style.display   = tab === "deals"   ? "" : "none";
+    document.getElementById("bestDayView").style.display = tab === "bestday" ? "" : "none";
+  }
+
+  // ── Alert ──────────────────────────────────────────────────────────────────
+  async function setAlert() {
+    const email     = document.getElementById("alertEmail").value.trim();
+    const threshold = document.getElementById("alertThreshold").value;
+    const dateFrom  = document.getElementById("dateFrom").value;
+    const dateTo    = document.getElementById("dateTo").value;
+    const retDate   = document.getElementById("returnDate").value;
+    const alertDest = document.getElementById("alertDest").value;
+    const statusEl  = document.getElementById("alertStatus");
+
+    if (!email || !email.includes("@")) { statusEl.style.color="#DC2626"; statusEl.textContent="Enter a valid email."; return; }
+
+    const topRoutes = [];
+    if (alertDest === "ALL") {
+      for (const dest of anywhereDestinations)
+        topRoutes.push({ origin:"SJC", destination:dest, departDate:dateFrom, returnDate:retDate });
+    } else {
+      const match = allDeals.find(d => d.destination === alertDest);
+      if (match) topRoutes.push({ origin:match.origin, destination:match.destination, departDate:match.departDate, returnDate:match.returnDate });
+      else topRoutes.push({ origin:"SJC", destination:alertDest, departDate:dateFrom, returnDate:retDate });
+    }
+
+    try {
+      const res  = await fetch("/api/set-alert", { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ email, threshold, dateFrom, dateTo, returnDate:retDate, topRoutes }) });
+      const data = await res.json();
+      if (data.ok) {
+        statusEl.style.color = "#065F46";
+        const destLabel = alertDest === "ALL" ? "all destinations" : `${alertDest} (${ALL_DESTINATIONS[alertDest]||alertDest})`;
+        statusEl.textContent = `Set! Watching ${destLabel} under $${threshold} daily.`;
+      } else { statusEl.style.color="#DC2626"; statusEl.textContent = data.error||"Failed."; }
+    } catch { statusEl.style.color="#DC2626"; statusEl.textContent="Request failed."; }
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function setStatus(html, err) {
+    const el = document.getElementById("statusBar");
+    el.className = err ? "error" : "";
+    el.innerHTML = html;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso + "T00:00:00");
+    const days   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
+  }
+
+  function skeletons(n) {
+    const row = h => `<div class="skel" style="height:${h}px;margin-bottom:8px"></div>`;
+    return Array.from({length:n}, () =>
+      `<div class="skel-card">${row(16)}${row(22)}${row(14)}${row(14)}${row(36)}</div>`
+    ).join("");
+  }
+
+  document.getElementById("originFilter").addEventListener("change", () => { currentPage=0; if(allDeals.length) renderDeals(); });
+
+  // ── API Key panel ──────────────────────────────────────────────────────────
+  async function refreshKeys() {
+    const [res, emailRes] = await Promise.all([
+      fetch("/api/keys").then(r => r.json()),
+      fetch("/api/email-config").then(r => r.json()),
+    ]);
+    const badge = document.getElementById("emailSetBadge");
+    badge.style.display = emailRes.set ? "inline" : "none";
+    if (emailRes.set) document.getElementById("emailFrom").placeholder = emailRes.from;
+    const active = res.keys.find(k => k.active);
+    document.getElementById("keyDot").style.background = res.active ? "#22C55E" : "#EF4444";
+    document.getElementById("keyLabel").textContent = active ? active.masked : "No API key";
+    const list = document.getElementById("keyList");
+    if (!res.keys.length) {
+      list.innerHTML = '<p style="font-size:0.75rem;color:#94A3B8;margin-bottom:8px">No keys saved yet. Add one below.</p>';
+      return;
+    }
+    list.innerHTML = res.keys.map(k => `
+      <div class="key-option${k.active ? " active" : ""}" onclick="selectKey('${k.name}')">
+        <span class="key-option-dot"></span>
+        <span class="key-option-name">${k.name}</span>
+        <span class="key-option-masked">${k.masked}</span>
+        ${k.is_alert ? '<span class="alert-tag set" title="Reserved for automated alert emails">alerts</span>' : ''}
+        <span class="key-option-del" onclick="event.stopPropagation();deleteKey('${k.name}')" title="Remove">✕</span>
+      </div>`).join("");
+  }
+
+  function toggleKeyPanel() {
+    const p = document.getElementById("keyPanel");
+    const open = p.style.display !== "block";
+    p.style.display = open ? "block" : "none";
+    if (open) refreshKeys();
+  }
+
+  document.addEventListener("click", (e) => {
+    const p = document.getElementById("keyPanel");
+    const b = document.getElementById("keyBtn");
+    if (p.style.display === "block" && !p.contains(e.target) && !b.contains(e.target))
+      p.style.display = "none";
+  });
+
+  async function selectKey(name) {
+    await fetch("/api/keys/select", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({name}) });
+    await refreshKeys();
+    setMsg("Active! Live prices on next search.", "#15803D");
+  }
+
+  async function addKey() {
+    const name = document.getElementById("keyNameInput").value.trim() || "Key " + (Date.now() % 1000);
+    const key  = document.getElementById("keyValueInput").value.trim();
+    if (!key) { setMsg("Paste a key first.", "#DC2626"); return; }
+    await fetch("/api/keys/add", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({name, key}) });
+    document.getElementById("keyNameInput").value  = "";
+    document.getElementById("keyValueInput").value = "";
+    await selectKey(name);
+  }
+
+  async function saveEmailConfig() {
+    const from = document.getElementById("emailFrom").value.trim();
+    const pass = document.getElementById("emailPass").value.trim();
+    if (!from || !pass) { setMsg("Enter both email and app password.", "#DC2626"); return; }
+    await fetch("/api/email-config", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({from, pass}) });
+    document.getElementById("emailPass").value = "";
+    await refreshKeys();
+    setMsg("Email configured! Alerts will send from " + from, "#15803D");
+  }
+
+  async function deleteKey(name) {
+    await fetch("/api/keys/delete", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({name}) });
+    await refreshKeys();
+  }
+
+
+  function setMsg(txt, color) {
+    const el = document.getElementById("keyMsg");
+    el.style.color = color; el.textContent = txt;
+    setTimeout(() => el.textContent = "", 2500);
+  }
+
+  refreshKeys();
+
+  // ── Trip type ──────────────────────────────────────────────────────────────
+  function setTripType(type) {
+    const isRound = type === "roundtrip";
+    document.getElementById("btnOneWay").classList.toggle("active", !isRound);
+    document.getElementById("btnRoundTrip").classList.toggle("active", isRound);
+    document.getElementById("returnField").style.display = isRound ? "" : "none";
+    if (!isRound) document.getElementById("returnDate").value = "";
+    updateCallEstimate();
+  }
+
+  function setReturnOffset(days) {
+    const from = document.getElementById("dateFrom").value;
+    if (!from) return;
+    const d = new Date(from + "T00:00:00");
+    d.setDate(d.getDate() + days);
+    document.getElementById("returnDate").value = d.toISOString().slice(0, 10);
+  }
+
+  // ── Month quick-select ─────────────────────────────────────────────────────
+  function setMonth(offset) {
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth() + offset;
+    const first = new Date(y, m, 1);
+    const last  = new Date(y, m + 1, 0);
+    const fmt = d => d.toISOString().slice(0, 10);
+    document.getElementById("dateFrom").value = fmt(first);
+    document.getElementById("dateTo").value   = fmt(last);
+    updateCallEstimate();
+  }
+
+  // ── API call estimator ─────────────────────────────────────────────────────
+  const FLYABLE_DOW = new Set([5, 6, 0]); // Fri, Sat, Sun
+
+  function countFlyableDays(from, to) {
+    if (!from || !to || from > to) return 0;
+    let count = 0, d = new Date(from + "T00:00:00");
+    const end = new Date(to + "T00:00:00");
+    while (d <= end) {
+      const iso = d.toISOString().slice(0, 10);
+      if (FLYABLE_DOW.has(d.getDay()) || HOLIDAYS.has(iso)) count++;
+      d.setDate(d.getDate() + 1);
+    }
+    return count;
+  }
+
+  function updateCallEstimate() {
+    const from  = document.getElementById("dateFrom").value;
+    const to    = document.getElementById("dateTo").value;
+    const ndest = selectedDests.size;
+    const days  = countFlyableDays(from, to);
+    const est   = ndest * 2 * days; // 2 origins
+    const el    = document.getElementById("callEstimate");
+    if (!el || !from || !to) return;
+    const over  = est > 250;
+    el.innerHTML = est === 0 ? "" :
+      `<span class="quota-badge ${over ? "warn" : "cached"}">~${est} API calls${over ? " — over 250 limit" : ""}</span>`;
+  }
+
+  // Wire up estimate updates
+  ["dateFrom","dateTo"].forEach(id =>
+    document.getElementById(id).addEventListener("change", updateCallEstimate));
+</script>
+</body>
+</html>
