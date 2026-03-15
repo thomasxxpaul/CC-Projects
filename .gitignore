@@ -14,6 +14,7 @@ venv/
 prices.db
 .serpapi_keys.json
 alerts.json
+.ai_keys.json
 
 # Node
 node_modules/

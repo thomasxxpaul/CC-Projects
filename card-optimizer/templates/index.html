@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Optimizer</title>
+  <!-- PWA: makes this installable as a home screen app on iPhone/Android -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Card Optimizer">
+  <meta name="theme-color" content="#004182">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+    /* ── Header ── */
+    header { background: linear-gradient(135deg, #0077b5 0%, #004182 100%); color: white; padding: 18px 24px 16px; text-align: center; }
+    header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 3px; }
+    header p  { font-size: 0.8rem; opacity: 0.75; }
+
+    /* ── Card chips in header ── */
+    .card-chips { display: flex; gap: 7px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+    .chip { padding: 3px 11px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.35); }
+
+    /* ── Tab nav ── */
+    .tabs { display: flex; gap: 0; background: white; border-bottom: 2px solid #e2e8f0; justify-content: center; position: sticky; top: 0; z-index: 50; }
+    .tab-btn { padding: 12px 22px; border: none; background: none; font-size: 0.87rem; font-weight: 600; color: #888; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
+    .tab-btn:hover  { color: #0077b5; }
+    .tab-btn.active { color: #0077b5; border-bottom-color: #0077b5; }
+
+    /* ── Main content area ── */
+    .content { max-width: 860px; margin: 0 auto; padding: 20px 16px 40px; }
+    section { display: none; }
+    section.active { display: block; }
+
+    /* ── Dashboard ── */
+    .section-title { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 14px; }
+
+    .dash-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .dash-table thead tr { background: #f7f9fc; }
+    .dash-table th { padding: 11px 14px; font-size: 0.73rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #eaecf0; text-align: left; }
+    .dash-table th.card-col { text-align: center; }
+    .dash-table td { padding: 11px 14px; border-bottom: 1px solid #f0f2f5; font-size: 0.86rem; vertical-align: middle; }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr { cursor: pointer; transition: background 0.1s; }
+    .dash-table tbody tr:hover { background: #f7f9fc; }
+
+    .cat-cell { display: flex; align-items: center; gap: 8px; }
+    .cat-icon { font-size: 1.1rem; }
+    .cat-label { font-weight: 500; }
+
+    .rate-cell { text-align: center; }
+    .rate-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; background: #f0f2f5; color: #555; }
+    .rate-pill.winner { color: white; }
+    .rate-pill.bonus  { font-weight: 800; }
+
+    /* Expand row */
+    .expand-row td { background: #f7faff; padding: 0; }
+    .expand-inner { padding: 14px 16px; display: none; }
+    .expand-row.open .expand-inner { display: block; }
+    .expand-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+    .mini-card { background: white; border-radius: 10px; padding: 12px 14px; border: 2px solid #e2e8f0; }
+    .mini-card.winner { border-color: #27ae60; background: #f0faf4; }
+    .mini-card-name { font-size: 0.72rem; font-weight: 700; color: #888; margin-bottom: 4px; }
+    .mini-card-rate { font-size: 1.1rem; font-weight: 800; color: #1a1a2e; }
+    .mini-card-val  { font-size: 0.8rem; color: #555; margin-top: 2px; }
+    .mini-card-lbl  { font-size: 0.72rem; color: #888; margin-top: 4px; font-style: italic; }
+    .winner-tag { font-size: 0.68rem; font-weight: 700; color: #27ae60; text-transform: uppercase; margin-top: 4px; }
+
+    /* Trifecta callout */
+    .trifecta-box { background: #fffbea; border: 1.5px solid #f0c040; border-radius: 12px; padding: 13px 16px; margin-top: 18px; display: flex; gap: 10px; align-items: flex-start; }
+    .trifecta-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .trifecta-title { font-size: 0.85rem; font-weight: 700; color: #7a5c00; margin-bottom: 3px; }
+    .trifecta-body  { font-size: 0.8rem; color: #856404; line-height: 1.5; }
+
+    /* ── Calculator ── */
+    .calc-form { background: white; border-radius: 14px; padding: 22px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 20px; }
+    .calc-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+    .field-group label { font-size: 0.75rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+    .amount-wrap { position: relative; }
+    .amount-wrap span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 600; color: #888; }
+    .amount-wrap input { padding: 10px 10px 10px 26px; border: 1.5px solid #dde3ed; border-radius: 9px; font-size: 0.95rem; width: 100%; outline: none; transition: border-color 0.15s; }
+    .amount-wrap input:focus { border-color: #0077b5; }
+    select { padding: 10px 12px; border: 1.5px solid #dde3ed; border-radius: 9px; font-size: 0.88rem; width: 100%; background: white; outline: none; transition: border-color 0.15s; }
+    select:focus { border-color: #0077b5; }
+    .calc-btn { padding: 10px 24px; background: #0077b5; color: white; border: none; border-radius: 9px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+    .calc-btn:hover { background: #005f8f; }
+
+    .calc-results { display: none; }
+    .calc-results.show { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .result-card { background: white; border-radius: 14px; padding: 18px 16px; border: 2px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.15s; }
+    .result-card.winner { border-color: #27ae60; box-shadow: 0 3px 12px rgba(39,174,96,0.18); }
+    .result-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .result-card-name { font-size: 0.8rem; font-weight: 700; }
+    .use-badge { background: #27ae60; color: white; font-size: 0.63rem; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
+    .result-points { font-size: 1.5rem; font-weight: 800; color: #1a1a2e; margin-bottom: 2px; }
+    .result-points span { font-size: 0.85rem; font-weight: 500; color: #888; }
+    .result-dollars { font-size: 0.95rem; font-weight: 700; color: #27ae60; margin-bottom: 6px; }
+    .result-label { font-size: 0.73rem; color: #888; font-style: italic; }
+    .calc-note { margin-top: 12px; font-size: 0.77rem; color: #888; text-align: center; }
+
+    /* ── Discover Tracker ── */
+    .countdown-box { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 18px; text-align: center; }
+    .countdown-label { font-size: 0.78rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+    .countdown-num { font-size: 3rem; font-weight: 900; color: #ff6600; line-height: 1; }
+    .countdown-sub { font-size: 0.85rem; color: #888; margin-top: 4px; }
+
+    .quarters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .quarter-card { background: white; border-radius: 14px; padding: 16px; border: 2px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); opacity: 0.6; }
+    .quarter-card.active { border-color: #ff6600; opacity: 1; box-shadow: 0 3px 12px rgba(255,102,0,0.18); }
+    .quarter-card.future { opacity: 0.85; }
+    .quarter-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .quarter-name { font-size: 0.8rem; font-weight: 800; color: #555; }
+    .active-badge { background: #ff6600; color: white; font-size: 0.62rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+    .quarter-cats { font-size: 0.82rem; color: #1a1a2e; font-weight: 600; margin-bottom: 5px; line-height: 1.45; }
+    .quarter-cap { font-size: 0.72rem; color: #888; }
+    .quarter-rate { font-size: 1.05rem; font-weight: 800; color: #ff6600; margin-bottom: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      .expand-grid     { grid-template-columns: 1fr 1fr; }
+      .calc-results.show { grid-template-columns: 1fr 1fr; }
+      .quarters-grid   { grid-template-columns: 1fr; }
+      .tab-btn         { padding: 10px 14px; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>💳 Card Optimizer</h1>
+  <p>Which card to use for every purchase</p>
+  <div class="card-chips">
+    <span class="chip" style="background:rgba(26,115,232,0.35);border-color:rgba(26,115,232,0.5)">Chase Sapphire Preferred</span>
+    <span class="chip" style="background:rgba(52,168,83,0.35);border-color:rgba(52,168,83,0.5)">Chase Freedom Unlimited</span>
+    <span class="chip" style="background:rgba(255,102,0,0.35);border-color:rgba(255,102,0,0.5)">Discover it</span>
+    <span class="chip" style="background:rgba(108,63,196,0.35);border-color:rgba(108,63,196,0.5)">Bilt Mastercard</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('dashboard')">📊 Dashboard</button>
+  <button class="tab-btn"        onclick="showTab('calculator')">🧮 Calculator</button>
+  <button class="tab-btn"        onclick="showTab('discover')">🔄 Discover Tracker</button>
+</div>
+
+<!-- iPhone install banner — shown only on mobile Safari -->
+<div id="install-banner" style="display:none;background:#004182;color:white;padding:10px 16px;font-size:0.8rem;text-align:center;line-height:1.5">
+  📱 <strong>Add to Home Screen:</strong> tap the Share button <strong>⬆</strong> in Safari → "Add to Home Screen" → done. Opens like an app next time.
+  <button onclick="document.getElementById('install-banner').style.display='none'" style="background:none;border:1px solid rgba(255,255,255,0.4);color:white;border-radius:6px;padding:2px 8px;margin-left:8px;cursor:pointer;font-size:0.75rem">Dismiss</button>
+</div>
+
+<div class="content">
+
+  <!-- ── Dashboard ── -->
+  <section id="tab-dashboard" class="active">
+    <p class="section-title">Which card wins for each category?</p>
+    <table class="dash-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th class="card-col" style="color:#1a73e8">CSP</th>
+          <th class="card-col" style="color:#34a853">CFU</th>
+          <th class="card-col" style="color:#ff6600">Discover</th>
+          <th class="card-col" style="color:#6c3fc4">Bilt</th>
+        </tr>
+      </thead>
+      <tbody id="dash-body">
+        <tr><td colspan="4" style="text-align:center;color:#aaa;padding:30px">Loading…</td></tr>
+      </tbody>
+    </table>
+
+    <div class="trifecta-box">
+      <div class="trifecta-icon">💡</div>
+      <div>
+        <div class="trifecta-title">Chase Trifecta Tip</div>
+        <div class="trifecta-body">
+          Since you have <strong>both</strong> CSP + CFU, you can transfer Freedom Unlimited points into
+          your Sapphire Preferred account and redeem them at <strong>2¢ per point</strong> via travel partners.
+          That turns CFU's 1.5x flat rate into an effective <strong>3% back on everything</strong> —
+          better than most dedicated cashback cards.
+        </div>
+      </div>
+    </div>
+    <div class="trifecta-box" style="border-color:#c4a0f0;background:#f5f0ff;margin-top:10px">
+      <div class="trifecta-icon">🏠</div>
+      <div>
+        <div class="trifecta-title" style="color:#4a1f8a">Bilt Rent Tip</div>
+        <div class="trifecta-body" style="color:#5a3494">
+          <strong>Always pay rent with Bilt.</strong> It's the only card that earns points on rent
+          with <strong>zero transaction fee</strong>. At 1x points worth ~1.7¢ each, paying $2,000/month
+          in rent = ~$408/year in travel value for free. No minimum transaction requirement.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Calculator ── -->
+  <section id="tab-calculator">
+    <p class="section-title">How much will I earn?</p>
+    <div class="calc-form">
+      <div class="calc-row">
+        <div class="field-group">
+          <label>Amount Spent</label>
+          <div class="amount-wrap">
+            <span>$</span>
+            <input type="number" id="calc-amount" placeholder="100" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Category</label>
+          <select id="calc-category"></select>
+        </div>
+        <button class="calc-btn" onclick="runCalculator()">Calculate</button>
+      </div>
+    </div>
+    <div class="calc-results" id="calc-results"></div>
+    <p class="calc-note" id="calc-note" style="display:none">
+      CSP points valued at 2¢/pt via travel transfers · CFU effective 1.5¢/pt with trifecta pairing · Discover is straight cashback
+    </p>
+  </section>
+
+  <!-- ── Discover Tracker ── -->
+  <section id="tab-discover">
+    <p class="section-title">Discover 5% Rotating Categories</p>
+    <div class="countdown-box">
+      <div class="countdown-label">Days Until Next Rotation</div>
+      <div class="countdown-num" id="days-left">—</div>
+      <div class="countdown-sub" id="current-quarter-label">Loading…</div>
+    </div>
+    <div class="quarters-grid" id="quarters-grid">
+      <div style="grid-column:1/-1;text-align:center;color:#aaa;padding:20px">Loading…</div>
+    </div>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function showTab(name) {
+    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("tab-" + name).classList.add("active");
+    event.target.classList.add("active");
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function rateLabel(rate, currency) {
+    if (currency === "cashback") return rate + "%";
+    return rate + "x";
+  }
+
+  // ── Dashboard ─────────────────────────────────────────────────────────────
+  let dashData = [];   // cache for expand rows
+
+  async function loadDashboard() {
+    const rows = await fetch("/api/dashboard").then(r => r.json());
+    dashData = rows;
+    const tbody = document.getElementById("dash-body");
+    tbody.innerHTML = "";
+
+    const cardOrder = ["csp", "cfu", "discover", "bilt"];
+    const cardColors = { csp: "#1a73e8", cfu: "#34a853", discover: "#ff6600", bilt: "#6c3fc4" };
+
+    rows.forEach((row, i) => {
+      // Main row
+      const tr = document.createElement("tr");
+      tr.onclick = () => toggleExpand(i);
+
+      let html = `<td><div class="cat-cell"><span class="cat-icon">${esc(row.icon)}</span><span class="cat-label">${esc(row.label)}</span></div></td>`;
+
+      cardOrder.forEach(cardId => {
+        const res = row.results[cardId];
+        const isWinner = row.winner === cardId;
+        const pillStyle = isWinner ? `background:${cardColors[cardId]};` : "";
+        const pillClass = ["rate-pill", isWinner ? "winner" : "", res.is_bonus ? "bonus" : ""].join(" ").trim();
+        html += `<td class="rate-cell"><span class="${pillClass}" style="${pillStyle}">${rateLabel(res.rate, res.currency)}</span></td>`;
+      });
+
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+
+      // Hidden expand row
+      const expTr = document.createElement("tr");
+      expTr.className = "expand-row";
+      expTr.id = "expand-" + i;
+      expTr.innerHTML = `<td colspan="4"><div class="expand-inner" id="expand-inner-${i}"></div></td>`;
+      tbody.appendChild(expTr);
+    });
+  }
+
+  function toggleExpand(i) {
+    const row = document.getElementById("expand-" + i);
+    const inner = document.getElementById("expand-inner-" + i);
+    const wasOpen = row.classList.contains("open");
+
+    // Close all
+    document.querySelectorAll(".expand-row").forEach(r => r.classList.remove("open"));
+
+    if (!wasOpen) {
+      row.classList.add("open");
+      const data = dashData[i];
+      const cardOrder = ["csp", "cfu", "discover", "bilt"];
+      const cardColors = { csp: "#1a73e8", cfu: "#34a853", discover: "#ff6600", bilt: "#6c3fc4" };
+
+      let cards = cardOrder.map(cardId => {
+        const res = data.results[cardId];
+        const isWinner = data.winner === cardId;
+        const dollarPer100 = (res.effective_cents * 100).toFixed(0);
+        return `
+          <div class="mini-card ${isWinner ? 'winner' : ''}">
+            <div class="mini-card-name" style="color:${cardColors[cardId]}">${esc(res.card_name)}</div>
+            <div class="mini-card-rate">${rateLabel(res.rate, res.currency)}</div>
+            <div class="mini-card-val">~$${dollarPer100} back per $100 spent</div>
+            <div class="mini-card-lbl">${esc(res.label)}</div>
+            ${isWinner ? '<div class="winner-tag">✓ Best for this category</div>' : ''}
+          </div>`;
+      }).join("");
+
+      inner.innerHTML = `<div class="expand-grid">${cards}</div>`;
+    }
+  }
+
+  // ── Calculator ────────────────────────────────────────────────────────────
+
+  // Populate category dropdown from the dashboard data
+  async function populateCategoryDropdown() {
+    const rows = await fetch("/api/dashboard").then(r => r.json());
+    const sel = document.getElementById("calc-category");
+    sel.innerHTML = rows.map(r => `<option value="${esc(r.id)}">${esc(r.icon)} ${esc(r.label)}</option>`).join("");
+  }
+
+  async function runCalculator() {
+    const amount   = parseFloat(document.getElementById("calc-amount").value) || 0;
+    const category = document.getElementById("calc-category").value;
+    if (!amount) { alert("Please enter an amount."); return; }
+
+    const results = await fetch("/api/calculate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount, category }),
+    }).then(r => r.json());
+
+    const container = document.getElementById("calc-results");
+    const cardColors = { csp: "#1a73e8", cfu: "#34a853", discover: "#ff6600", bilt: "#6c3fc4" };
+
+    container.innerHTML = results.map(r => `
+      <div class="result-card ${r.is_winner ? 'winner' : ''}">
+        <div class="result-card-top">
+          <div class="result-card-name" style="color:${cardColors[r.card_id]}">${esc(r.card_name)}</div>
+          ${r.is_winner ? '<span class="use-badge">Use This</span>' : ''}
+        </div>
+        <div class="result-points">${r.points_earned}<span> ${r.currency === 'cashback' ? 'cents back' : 'points'}</span></div>
+        <div class="result-dollars">≈ $${r.dollar_value.toFixed(2)} value</div>
+        <div class="result-label">${esc(r.label)}</div>
+      </div>`).join("");
+
+    container.className = "calc-results show";
+    document.getElementById("calc-note").style.display = "block";
+  }
+
+  // ── Discover Tracker ──────────────────────────────────────────────────────
+  async function loadDiscoverTracker() {
+    const data = await fetch("/api/discover-tracker").then(r => r.json());
+
+    document.getElementById("days-left").textContent = data.days_until_rotation;
+
+    const currentQ = data.quarters[data.current_quarter_num - 1];
+    document.getElementById("current-quarter-label").textContent =
+      currentQ ? `${currentQ.quarter} ends — ${currentQ.label}` : "";
+
+    const grid = document.getElementById("quarters-grid");
+    grid.innerHTML = data.quarters.map((q, idx) => {
+      const qNum   = idx + 1;
+      const active = qNum === data.current_quarter_num;
+      const past   = qNum < data.current_quarter_num;
+      const cls    = active ? "active" : (past ? "" : "future");
+      return `
+        <div class="quarter-card ${cls}">
+          <div class="quarter-head">
+            <div class="quarter-name">${esc(q.quarter)}</div>
+            ${active ? '<span class="active-badge">Active Now</span>' : ''}
+          </div>
+          <div class="quarter-rate">${q.rate}% cashback</div>
+          <div class="quarter-cats">${esc(q.label)}</div>
+          <div class="quarter-cap">Up to $${q.cap_dollars.toLocaleString()}/quarter · 1% after cap</div>
+        </div>`;
+    }).join("");
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  document.addEventListener("DOMContentLoaded", () => {
+    loadDashboard();
+    populateCategoryDropdown();
+    loadDiscoverTracker();
+
+    // Show install banner on iPhone Safari only (not already installed as PWA)
+    const isIOS     = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isSafari  = /safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone;
+    if (isIOS && isSafari && !isStandalone) {
+      const dismissed = localStorage.getItem("install-banner-dismissed");
+      if (!dismissed) {
+        document.getElementById("install-banner").style.display = "block";
+      }
+    }
+  });
+
+  // Remember dismiss across sessions
+  document.getElementById("install-banner").querySelector("button").addEventListener("click", () => {
+    localStorage.setItem("install-banner-dismissed", "1");
+  });
+</script>
+</body>
+</html>
