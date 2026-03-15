@@ -24,6 +24,17 @@
     .card-chips { display: flex; gap: 7px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
     .chip { padding: 3px 11px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.35); }
 
+    /* ── QR modal ── */
+    .qr-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; }
+    .qr-btn:hover { background: rgba(255,255,255,0.3); }
+    .qr-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: center; justify-content: center; }
+    .qr-overlay.show { display: flex; }
+    .qr-box { background: white; border-radius: 18px; padding: 28px 28px 22px; text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.25); max-width: 280px; width: 90%; }
+    .qr-box h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: #1a1a2e; }
+    .qr-box p  { font-size: 0.78rem; color: #888; margin-bottom: 16px; }
+    .qr-box img { width: 200px; height: 200px; border-radius: 8px; }
+    .qr-close { margin-top: 14px; background: none; border: 1px solid #dde3ed; border-radius: 8px; padding: 7px 20px; font-size: 0.83rem; cursor: pointer; color: #555; }
+
     /* ── Tab nav ── */
     .tabs { display: flex; gap: 0; background: white; border-bottom: 2px solid #e2e8f0; justify-content: center; position: sticky; top: 0; z-index: 50; }
     .tab-btn { padding: 12px 22px; border: none; background: none; font-size: 0.87rem; font-weight: 600; color: #888; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.15s; }
@@ -119,20 +130,178 @@
     .quarter-cap { font-size: 0.72rem; color: #888; }
     .quarter-rate { font-size: 1.05rem; font-weight: 800; color: #ff6600; margin-bottom: 4px; }
 
+    /* ── Transaction Audit ── */
+    .audit-intro { font-size: 0.83rem; color: #555; margin-bottom: 14px; line-height: 1.5; }
+    .audit-setup { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 16px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+    .audit-setup .field-group { flex: 1; min-width: 160px; }
+
+    .drop-zone { border: 2px dashed #c0cfe8; border-radius: 12px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.15s; background: #f7f9ff; margin-bottom: 16px; }
+    .drop-zone.drag-over { border-color: #0077b5; background: #eaf3fb; }
+    .drop-zone input[type=file] { display: none; }
+    .drop-zone-icon { font-size: 2rem; margin-bottom: 8px; }
+    .drop-zone-text { font-size: 0.9rem; font-weight: 600; color: #0077b5; margin-bottom: 4px; }
+    .drop-zone-sub  { font-size: 0.75rem; color: #888; }
+
+    .audit-summary { display: none; border-radius: 14px; padding: 16px 20px; margin-bottom: 14px; }
+    .audit-summary.show { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .audit-stat { background: white; border-radius: 10px; padding: 12px 14px; }
+    .audit-stat-label { font-size: 0.7rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+    .audit-stat-val { font-size: 1.25rem; font-weight: 800; }
+    .audit-stat-val.green { color: #27ae60; }
+    .audit-stat-val.red   { color: #e53e3e; }
+    .audit-stat-val.blue  { color: #0077b5; }
+
+    .audit-table-wrap { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.07); display: none; }
+    .audit-table-wrap.show { display: block; }
+    .audit-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .audit-table thead tr { background: #f7f9fc; }
+    .audit-table th { padding: 10px 12px; font-size: 0.7rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #eaecf0; text-align: left; }
+    .audit-table td { padding: 10px 12px; border-bottom: 1px solid #f5f7fa; vertical-align: middle; }
+    .audit-table tr:last-child td { border-bottom: none; }
+    .audit-table tr.optimal td { background: #f6fff9; }
+    .audit-table tr.suboptimal td { background: #fff8f8; }
+    .audit-flag { font-size: 1rem; }
+    .audit-missed { font-size: 0.75rem; font-weight: 700; color: #e53e3e; }
+    .audit-ok     { font-size: 0.75rem; font-weight: 700; color: #27ae60; }
+    .audit-better { font-size: 0.72rem; color: #888; font-style: italic; }
+    .audit-cat-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; background: #eef2ff; color: #3a4c9a; font-size: 0.7rem; font-weight: 600; }
+
+    /* ── Upgrade Analyzer ── */
+    .upgrade-intro { font-size: 0.83rem; color: #555; margin-bottom: 16px; line-height: 1.5; }
+    .upgrade-spend-summary { display: none; background: white; border-radius: 14px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 16px; }
+    .upgrade-spend-summary.show { display: block; }
+    .upgrade-spend-title { font-size: 0.78rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 12px; }
+    .upgrade-spend-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .upgrade-spend-item { background: #f7f9fc; border-radius: 8px; padding: 8px 10px; }
+    .upgrade-spend-cat { font-size: 0.72rem; color: #888; margin-bottom: 2px; }
+    .upgrade-spend-amt { font-size: 0.88rem; font-weight: 700; color: #1a1a2e; }
+
+    .rec-list { display: flex; flex-direction: column; gap: 14px; }
+    .rec-card { background: white; border-radius: 14px; padding: 18px 20px; border: 2px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .rec-card.positive { border-color: #27ae60; }
+    .rec-card.neutral { opacity: 0.75; }
+    .rec-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+    .rec-name { font-size: 1rem; font-weight: 800; }
+    .rec-gain { font-size: 1.2rem; font-weight: 900; }
+    .rec-gain.positive { color: #27ae60; }
+    .rec-gain.negative { color: #e53e3e; }
+    .rec-note { font-size: 0.78rem; color: #888; margin-bottom: 10px; line-height: 1.45; }
+    .rec-fee-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rec-fee-chip { background: #f0f2f5; border-radius: 6px; padding: 3px 9px; font-size: 0.73rem; color: #555; font-weight: 600; }
+    .rec-wins-title { font-size: 0.72rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+    .rec-wins { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rec-win-item { background: #f0faf4; border: 1px solid #c8e6d8; border-radius: 8px; padding: 5px 10px; font-size: 0.75rem; }
+    .rec-win-cat { font-weight: 700; color: #1a1a2e; }
+    .rec-win-val { color: #27ae60; font-weight: 700; }
+    .rec-no-win { font-size: 0.78rem; color: #aaa; font-style: italic; }
+    .rec-upgrade-note { font-size: 0.75rem; color: #c0822a; background: #fff8e1; border-radius: 6px; padding: 5px 10px; margin-top: 8px; display: inline-block; }
+    .upgrade-empty { text-align: center; color: #aaa; padding: 40px 20px; font-size: 0.9rem; }
+
+    /* ── Partners / Transfer News ── */
+    .rent-day-box { background: white; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 16px; display: flex; align-items: flex-start; gap: 18px; border: 2px solid #e2e8f0; }
+    .rent-day-num { font-size: 2.8rem; font-weight: 900; color: #6c3fc4; line-height: 1; flex-shrink: 0; min-width: 60px; text-align: center; }
+    .rent-day-unit { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: #9a7fd4; letter-spacing: 0.3px; text-align: center; margin-top: 2px; }
+    .rent-day-desc { font-size: 0.82rem; color: #555; line-height: 1.5; }
+
+    .partner-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+    .partner-table-card { background: white; border-radius: 14px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .partner-table-head { font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; }
+    .partner-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f0f2f5; font-size: 0.8rem; }
+    .partner-row:last-child { border-bottom: none; }
+    .partner-name { color: #1a1a2e; font-weight: 500; }
+    .partner-ratio { font-weight: 700; color: #27ae60; font-size: 0.72rem; background: #f0faf4; padding: 2px 7px; border-radius: 8px; }
+
+    .news-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+    .news-meta { font-size: 0.75rem; color: #888; }
+    .news-list { display: flex; flex-direction: column; gap: 0; }
+    .news-section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin: 14px 0 8px; }
+
+    /* Bonus alert cards — prominent, scannable */
+    .bonus-grid { display: flex; flex-direction: column; gap: 10px; }
+    .bonus-card { background: white; border-radius: 14px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 2px solid #e2f0e8; }
+    .bonus-card.fresh { border-color: #16a34a; }
+    .bonus-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+    .bonus-partner { font-size: 1.1rem; font-weight: 800; color: #1a1a2e; }
+    .bonus-pct { background: #16a34a; color: white; font-size: 0.95rem; font-weight: 800; padding: 3px 13px; border-radius: 20px; white-space: nowrap; }
+    .bonus-pct.unknown { background: #f0f2f5; color: #666; font-size: 0.78rem; font-weight: 600; }
+    .bonus-article-title { font-size: 0.78rem; color: #555; line-height: 1.4; margin-top: 2px; }
+    .bonus-article-title a { color: #0077b5; text-decoration: none; }
+    .bonus-article-title a:hover { text-decoration: underline; }
+    .bonus-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .bonus-source-date { font-size: 0.7rem; color: #aaa; }
+
+    /* Other news — compact, secondary */
+    .other-news-list { display: flex; flex-direction: column; gap: 7px; }
+    .other-news-card { background: white; border-radius: 10px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .other-news-title { font-size: 0.82rem; color: #1a1a2e; font-weight: 600; line-height: 1.4; }
+    .other-news-title a { color: inherit; text-decoration: none; }
+    .other-news-title a:hover { text-decoration: underline; }
+    .other-news-meta { font-size: 0.7rem; color: #aaa; margin-top: 3px; }
+    .news-empty { text-align: center; color: #aaa; padding: 30px 20px; font-size: 0.88rem; }
+
+    /* Never-miss-a-bonus guide box */
+    .alert-how-box { background: #f5f0ff; border: 1.5px solid #c4a0f0; border-radius: 14px; padding: 18px 20px; margin-top: 20px; }
+    .alert-how-title { font-size: 0.88rem; font-weight: 800; color: #4a1f8a; margin-bottom: 12px; }
+    .alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #e5d9f7; }
+    .alert-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .alert-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .alert-text { font-size: 0.82rem; color: #3a2060; line-height: 1.45; }
+    .alert-text strong { color: #2d0f6e; }
+    .alert-text a { color: #6c3fc4; text-decoration: none; font-weight: 600; }
+    .alert-text a:hover { text-decoration: underline; }
+
     /* ── Responsive ── */
     @media (max-width: 720px) {
-      .expand-grid     { grid-template-columns: 1fr 1fr; }
-      .calc-results.show { grid-template-columns: 1fr 1fr; }
-      .quarters-grid   { grid-template-columns: 1fr; }
-      .tab-btn         { padding: 10px 14px; font-size: 0.8rem; }
+      /* Header: hide card chips to save space */
+      .card-chips { display: none; }
+      header { padding: 14px 16px 12px; }
+      header h1 { font-size: 1.2rem; }
+
+      /* Tab bar: scroll horizontally so all 5 tabs fit */
+      .tabs { justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab-btn { padding: 11px 14px; font-size: 0.78rem; white-space: nowrap; flex-shrink: 0; }
+
+      /* Content: tighter padding on phone */
+      .content { padding: 14px 12px 40px; }
+
+      /* Dashboard: make table horizontally scrollable on small screens */
+      .dash-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; }
+      .dash-table { min-width: 480px; border-radius: 0; }
+      .dash-table th, .dash-table td { padding: 10px 10px; font-size: 0.8rem; }
+
+      /* Expand rows: 2-column grid */
+      .expand-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .mini-card { padding: 10px 11px; }
+
+      /* Calculator: stack inputs vertically, results 2-col */
+      .calc-row { flex-direction: column; }
+      .field-group { min-width: 100%; }
+      .calc-btn { width: 100%; }
+      .calc-results.show { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .result-card { padding: 14px 12px; }
+      .result-points { font-size: 1.25rem; }
+
+      /* Discover: single column */
+      .quarters-grid { grid-template-columns: 1fr; }
+
+      /* Audit: 2-col summary, hide date column */
+      .audit-summary.show { grid-template-columns: 1fr 1fr; }
+      .audit-table th:nth-child(2),
+      .audit-table td:nth-child(2) { display: none; }   /* hide Date column */
+      .audit-table th, .audit-table td { padding: 8px 8px; }
+      .audit-setup { flex-direction: column; }
+      .upgrade-spend-grid { grid-template-columns: 1fr 1fr; }
+      .partner-tables { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-<header>
+<header style="position:relative">
   <h1>💳 Card Optimizer</h1>
   <p>Which card to use for every purchase</p>
+  <button class="qr-btn" onclick="document.getElementById('qr-overlay').classList.add('show')">📱 QR</button>
   <div class="card-chips">
     <span class="chip" style="background:rgba(26,115,232,0.35);border-color:rgba(26,115,232,0.5)">Chase Sapphire Preferred</span>
     <span class="chip" style="background:rgba(52,168,83,0.35);border-color:rgba(52,168,83,0.5)">Chase Freedom Unlimited</span>
@@ -144,7 +313,21 @@
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('dashboard')">📊 Dashboard</button>
   <button class="tab-btn"        onclick="showTab('calculator')">🧮 Calculator</button>
-  <button class="tab-btn"        onclick="showTab('discover')">🔄 Discover Tracker</button>
+  <button class="tab-btn"        onclick="showTab('discover')">🔄 Discover</button>
+  <button class="tab-btn"        onclick="showTab('audit')">📋 Audit</button>
+  <button class="tab-btn"        onclick="showTab('upgrade')">💡 Upgrade?</button>
+  <button class="tab-btn"        onclick="showTab('partners')">✈️ Partners</button>
+</div>
+
+<!-- QR code modal -->
+<div class="qr-overlay" id="qr-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="qr-box">
+    <h3>Open on your phone</h3>
+    <p>Scan this with your camera to open Card Optimizer on any device on the same WiFi</p>
+    <img src="/qr.png" alt="QR code">
+    <br>
+    <button class="qr-close" onclick="document.getElementById('qr-overlay').classList.remove('show')">Close</button>
+  </div>
 </div>
 
 <!-- iPhone install banner — shown only on mobile Safari -->
@@ -158,6 +341,7 @@
   <!-- ── Dashboard ── -->
   <section id="tab-dashboard" class="active">
     <p class="section-title">Which card wins for each category?</p>
+    <div class="dash-table-wrap">
     <table class="dash-table">
       <thead>
         <tr>
@@ -172,6 +356,7 @@
         <tr><td colspan="4" style="text-align:center;color:#aaa;padding:30px">Loading…</td></tr>
       </tbody>
     </table>
+    </div>
 
     <div class="trifecta-box">
       <div class="trifecta-icon">💡</div>
@@ -233,6 +418,188 @@
     </div>
     <div class="quarters-grid" id="quarters-grid">
       <div style="grid-column:1/-1;text-align:center;color:#aaa;padding:20px">Loading…</div>
+    </div>
+  </section>
+
+  <!-- ── Transaction Audit ── -->
+  <section id="tab-audit">
+    <p class="section-title">Did You Use the Right Card?</p>
+    <p class="audit-intro">
+      Download your transaction CSV from chase.com → Accounts → [card] → Download transactions.
+      Upload it here and we'll flag every purchase where a different card would have earned more.
+    </p>
+
+    <div class="audit-setup">
+      <div class="field-group">
+        <label style="font-size:0.75rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;display:block;margin-bottom:5px">Which card is this CSV from?</label>
+        <select id="audit-card-select">
+          <option value="csp">Chase Sapphire Preferred (CSP)</option>
+          <option value="cfu">Chase Freedom Unlimited (CFU)</option>
+          <option value="discover">Discover it Cash Back</option>
+          <option value="bilt">Bilt Mastercard</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <input type="file" id="csv-file" accept=".csv" onchange="handleFile(this.files[0])">
+      <div class="drop-zone-icon">📄</div>
+      <div class="drop-zone-text">Drop your Chase CSV here, or click to browse</div>
+      <div class="drop-zone-sub">Columns needed: Transaction Date · Description · Category · Amount</div>
+    </div>
+
+    <div class="audit-summary" id="audit-summary">
+      <div class="audit-stat">
+        <div class="audit-stat-label">Transactions analyzed</div>
+        <div class="audit-stat-val blue" id="audit-count">—</div>
+      </div>
+      <div class="audit-stat">
+        <div class="audit-stat-label">Optimal ✓</div>
+        <div class="audit-stat-val green" id="audit-optimal-count">—</div>
+      </div>
+      <div class="audit-stat">
+        <div class="audit-stat-label">Left on the table</div>
+        <div class="audit-stat-val red" id="audit-missed-total">—</div>
+      </div>
+    </div>
+
+    <div class="audit-table-wrap" id="audit-table-wrap">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody id="audit-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Upgrade Analyzer ── -->
+  <section id="tab-upgrade">
+    <p class="section-title">Which Card Should I Get Next?</p>
+    <p class="upgrade-intro">
+      Upload your Chase CSV to see which new cards would earn you the most extra value based on your <strong>real spending</strong>.
+      We'll annualize your transactions and rank 6 popular cards by how much extra you'd earn per year — net of any annual fee.
+    </p>
+
+    <div class="drop-zone" id="upgrade-drop-zone"
+         onclick="document.getElementById('upgrade-csv-file').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleUpgradeDrop(event)">
+      <input type="file" id="upgrade-csv-file" accept=".csv" onchange="handleUpgradeFile(this.files[0])">
+      <div class="drop-zone-icon">📊</div>
+      <div class="drop-zone-text">Drop your Chase CSV here, or click to browse</div>
+      <div class="drop-zone-sub">Download from chase.com → Accounts → [card] → Download transactions</div>
+    </div>
+
+    <div class="upgrade-spend-summary" id="upgrade-spend-summary">
+      <div class="upgrade-spend-title" id="upgrade-spend-title">Your Annualized Spending</div>
+      <div class="upgrade-spend-grid" id="upgrade-spend-grid"></div>
+    </div>
+
+    <div class="upgrade-empty" id="upgrade-empty" style="display:none">
+      No significant spending found in this file.
+    </div>
+    <div class="rec-list" id="rec-list"></div>
+  </section>
+
+  <!-- ── Partners / Transfer News ── -->
+  <section id="tab-partners">
+    <p class="section-title">Transfer Partners &amp; Bonus Alerts</p>
+
+    <!-- Bilt Rent Day countdown -->
+    <div class="rent-day-box" id="rent-day-box">
+      <div>
+        <div class="rent-day-num" id="rent-day-num">—</div>
+        <div class="rent-day-unit">days to<br>Rent Day</div>
+      </div>
+      <div class="rent-day-desc">
+        <strong>Bilt Rent Day = the 1st of every month.</strong>
+        On Rent Day, Bilt earns <strong>3x on dining, 2x on travel</strong>, and 1x on everything else
+        (including rent) — double the normal rates. Best time to make big purchases on Bilt.
+      </div>
+    </div>
+
+    <!-- Transfer Partners reference -->
+    <div class="partner-tables">
+      <div class="partner-table-card">
+        <div class="partner-table-head" style="color:#1a73e8">Chase Ultimate Rewards Partners</div>
+        <div class="partner-row"><span class="partner-name">World of Hyatt</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">United MileagePlus</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Southwest Rapid Rewards</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Air Canada Aeroplan</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">British Airways Avios</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Singapore KrisFlyer</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Flying Blue (Air France/KLM)</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Emirates Skywards</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Virgin Atlantic Flying Club</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Marriott Bonvoy</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">IHG One Rewards</span><span class="partner-ratio">1:1</span></div>
+      </div>
+      <div class="partner-table-card">
+        <div class="partner-table-head" style="color:#6c3fc4">Bilt Rewards Partners</div>
+        <div class="partner-row"><span class="partner-name">World of Hyatt</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">United MileagePlus</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">American AAdvantage</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Alaska Mileage Plan</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Air Canada Aeroplan</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">British Airways Avios</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Flying Blue</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Emirates Skywards</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Turkish Miles&amp;Smiles</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Marriott Bonvoy</span><span class="partner-ratio">1:1</span></div>
+        <div class="partner-row"><span class="partner-name">Hilton Honors</span><span class="partner-ratio">1:2</span></div>
+      </div>
+    </div>
+
+    <!-- Live Transfer Bonus News -->
+    <div class="news-header">
+      <p class="section-title" style="margin:0">Live Transfer Bonus Alerts</p>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="news-meta" id="news-meta">Loading…</span>
+        <button class="refresh-btn" onclick="loadTransferNews(true)">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="deals-note">
+      🔔 Scans <strong>Frequent Miler</strong>, <strong>The Points Guy</strong>, and <strong>Million Mile Secrets</strong> for active transfer bonuses. Updated every 2 hours.
+    </div>
+    <div class="news-list" id="news-list">
+      <div class="news-empty">Loading…</div>
+    </div>
+
+    <!-- Permanent: how to never miss a bonus -->
+    <div class="alert-how-box">
+      <div class="alert-how-title">🔔 How to never miss a transfer bonus</div>
+      <div class="alert-row">
+        <div class="alert-icon">📧</div>
+        <div class="alert-text"><strong>Frequent Miler newsletter</strong> — the best free email alert for transfer bonuses. They email within hours of a new bonus launching. <a href="https://frequentmiler.com" target="_blank" rel="noopener">Sign up at frequentmiler.com</a></div>
+      </div>
+      <div class="alert-row">
+        <div class="alert-icon">📱</div>
+        <div class="alert-text"><strong>Bilt app push notifications</strong> — enable notifications in the Bilt app to get alerted on Rent Day bonus events and transfer promotions directly from Bilt.</div>
+      </div>
+      <div class="alert-row">
+        <div class="alert-icon">✉️</div>
+        <div class="alert-text"><strong>Chase promotional emails</strong> — log in to chase.com → Profile → Communication preferences → opt in to "Rewards offers &amp; promotions" to get UR transfer bonus emails.</div>
+      </div>
+      <div class="alert-row">
+        <div class="alert-icon">🛍️</div>
+        <div class="alert-text"><strong>Rakuten bonus events</strong> — Rakuten runs seasonal "Big Fat Check" events where you earn 10x+ points at restaurants or stores. Free to join at <a href="https://www.rakuten.com" target="_blank" rel="noopener">rakuten.com</a> — they email enrolled members when events start.</div>
+      </div>
+      <div class="alert-row">
+        <div class="alert-icon">✈️</div>
+        <div class="alert-text"><strong>Airline &amp; hotel apps</strong> — United, Hyatt, and Marriott sometimes run their own "transfer to us and get 30% more" promos. Enable push notifications in each loyalty app to catch these — they often last only 1–2 weeks.</div>
+      </div>
     </div>
   </section>
 
@@ -395,11 +762,384 @@
     }).join("");
   }
 
+  // ── Transaction Audit ─────────────────────────────────────────────────────
+
+  // Maps Chase CSV category + merchant description → our internal category IDs
+  function detectCategory(chaseCategory, description) {
+    const desc = description.toLowerCase();
+    const cat  = (chaseCategory || "").toLowerCase();
+
+    // Merchant-specific overrides (more reliable than Chase's own category)
+    if (/amazon|amzn/.test(desc))                                                           return "amazon";
+    if (/walmart/.test(desc))                                                               return "walmart";
+    if (/\btarget\b/.test(desc))                                                            return "walmart";  // combined
+    if (/netflix|spotify|hulu|disney\+|apple\.com\/bill|youtube premium|peacock|paramount|hbo max|max\.com|sling/.test(desc)) return "streaming";
+    if (/\bcvs\b|walgreen|rite aid|duane reade|pharmacy|drug mart/.test(desc))             return "drugstore";
+    if (/shell|chevron|exxon|mobil|\bbp\b|arco|\b76\b|marathon|sunoco|speedway|circle k|wawa|pilot travel|loves travel/.test(desc)) return "gas";
+    if (/whole foods|trader joe|safeway|kroger|albertsons|publix|\bheb\b|stop.?shop|wegman|market basket|vons|ralphs/.test(desc)) return "grocery";
+    if (/home depot|lowe.s|ace hardware|menards/.test(desc))                               return "home_improvement";
+    if (/planet fitness|equinox|la fitness|gold.s gym|24 hour fitness|crunch fitness|ymca|anytime fitness/.test(desc)) return "fitness";
+    if (/uber|lyft|airbnb|marriott|hilton|hyatt|southwest|delta|united air|american air|frontier|spirit air|jetblue/.test(desc)) return "travel_other";
+
+    // Chase category fallbacks
+    if (/food|dining|restaurant|cafe|coffee|bar |bakery/.test(cat))   return "dining";
+    if (/groceries|grocery|supermarket/.test(cat))                    return "grocery";
+    if (/gas|fuel|automotive/.test(cat))                              return "gas";
+    if (/travel|airline|hotel|lodging|transport/.test(cat))           return "travel_other";
+    if (/health|wellness|medical|pharmacy|drug/.test(cat))            return "drugstore";
+    if (/entertainment|streaming/.test(cat))                          return "streaming";
+    if (/home/.test(cat))                                             return "home_improvement";
+
+    return "everything_else";
+  }
+
+  // Parse a Chase CSV string into an array of transaction objects
+  function parseChaseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+
+    // Find column indices from header row
+    const header = lines[0].split(",").map(h => h.trim().replace(/"/g, "").toLowerCase());
+    const col = name => header.findIndex(h => h.includes(name));
+
+    const iDate   = col("transaction date") !== -1 ? col("transaction date") : col("date");
+    const iDesc   = col("description");
+    const iCat    = col("category");
+    const iAmt    = col("amount");
+
+    if (iDesc === -1 || iAmt === -1) return null;  // unrecognized format
+
+    const txns = [];
+    for (let i = 1; i < lines.length; i++) {
+      // Handle quoted fields containing commas
+      const parts = lines[i].match(/(".*?"|[^,]+)(?=,|$)/g);
+      if (!parts || parts.length < 3) continue;
+      const get = idx => (parts[idx] || "").replace(/^"|"$/g, "").trim();
+
+      const amount = parseFloat(get(iAmt));
+      if (isNaN(amount) || amount >= 0) continue;  // skip payments/credits, only charges (negative)
+
+      txns.push({
+        date:     get(iDate),
+        desc:     get(iDesc),
+        chase_cat: iCat !== -1 ? get(iCat) : "",
+        amount:   Math.abs(amount),
+      });
+    }
+    return txns;
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById("drop-zone").classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => runAudit(e.target.result);
+    reader.readAsText(file);
+    document.getElementById("drop-zone").querySelector(".drop-zone-text").textContent = "✓ " + file.name;
+  }
+
+  function runAudit(csvText) {
+    const usedCardId = document.getElementById("audit-card-select").value;
+    const txns = parseChaseCSV(csvText);
+
+    if (txns === null) {
+      alert("Couldn't read this CSV — make sure it's a Chase transaction export with Description, Category, and Amount columns.");
+      return;
+    }
+    if (txns.length === 0) {
+      alert("No purchase transactions found in this file.");
+      return;
+    }
+
+    const cardColors = { csp: "#1a73e8", cfu: "#34a853", discover: "#ff6600", bilt: "#6c3fc4" };
+    const cardNames  = { csp: "CSP", cfu: "CFU", discover: "Discover", bilt: "Bilt" };
+
+    // Annotate each transaction using dashData (already loaded)
+    let missedTotal = 0;
+    let optimalCount = 0;
+    const rows = [];
+
+    for (const txn of txns) {
+      const catId   = detectCategory(txn.chase_cat, txn.desc);
+      const dashRow = dashData.find(d => d.id === catId) || dashData.find(d => d.id === "everything_else");
+      if (!dashRow) continue;
+
+      const usedResult    = dashRow.results[usedCardId];
+      const optimalCardId = dashRow.winner;
+      const optimalResult = dashRow.results[optimalCardId];
+
+      const usedValue    = txn.amount * usedResult.effective_cents;
+      const optimalValue = txn.amount * optimalResult.effective_cents;
+      const missed       = optimalValue - usedValue;
+      // Treat as optimal if: (a) no meaningful dollar difference, OR
+      // (b) same earning rate — e.g. CSP and CFU both earn 3x dining, so CFU isn't wrong
+      const sameRate  = usedResult.rate === optimalResult.rate;
+      const isOptimal = missed < 0.005 || sameRate;
+
+      if (isOptimal) {
+        optimalCount++;
+      } else {
+        missedTotal += missed;
+      }
+
+      rows.push({ txn, catId, dashRow, usedCardId, usedResult, optimalCardId, optimalResult, usedValue, optimalValue, missed, isOptimal });
+    }
+
+    // Update summary
+    document.getElementById("audit-count").textContent      = txns.length;
+    document.getElementById("audit-optimal-count").textContent = optimalCount;
+    document.getElementById("audit-missed-total").textContent  = "$" + missedTotal.toFixed(2);
+    document.getElementById("audit-summary").className = "audit-summary show";
+
+    // Build table
+    const tbody = document.getElementById("audit-tbody");
+    tbody.innerHTML = rows.map(r => {
+      const catLabel = r.dashRow.label;
+      const flag     = r.isOptimal ? "✅" : "🔴";
+      const rowCls   = r.isOptimal ? "optimal" : "suboptimal";
+      const resultHtml = r.isOptimal
+        ? `<span class="audit-ok">✓ Best card</span>`
+        : `<span class="audit-missed">−$${r.missed.toFixed(2)}</span>
+           <div class="audit-better">Use <strong style="color:${cardColors[r.optimalCardId]}">${cardNames[r.optimalCardId]}</strong> instead</div>`;
+
+      return `<tr class="${rowCls}">
+        <td class="audit-flag">${flag}</td>
+        <td>${esc(r.txn.date)}</td>
+        <td>${esc(r.txn.desc)}</td>
+        <td><span class="audit-cat-pill">${esc(catLabel)}</span></td>
+        <td>$${r.txn.amount.toFixed(2)}</td>
+        <td>${resultHtml}</td>
+      </tr>`;
+    }).join("");
+
+    document.getElementById("audit-table-wrap").className = "audit-table-wrap show";
+  }
+
+  // ── Upgrade Analyzer ──────────────────────────────────────────────────────
+
+  function handleUpgradeDrop(e) {
+    e.preventDefault();
+    document.getElementById("upgrade-drop-zone").classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file) handleUpgradeFile(file);
+  }
+
+  function handleUpgradeFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => runUpgradeAnalysis(e.target.result);
+    reader.readAsText(file);
+    document.getElementById("upgrade-drop-zone").querySelector(".drop-zone-text").textContent = "✓ " + file.name;
+  }
+
+  function runUpgradeAnalysis(csvText) {
+    const txns = parseChaseCSV(csvText);
+    if (!txns || txns.length === 0) {
+      alert("No transactions found — make sure it's a Chase CSV with Description and Amount columns.");
+      return;
+    }
+
+    // Aggregate raw spending by category
+    const spendByCat = {};
+    let earliest = null;
+    let latest   = null;
+
+    for (const txn of txns) {
+      const cat = detectCategory(txn.chase_cat, txn.desc);
+      spendByCat[cat] = (spendByCat[cat] || 0) + txn.amount;
+      const d = new Date(txn.date);
+      if (!isNaN(d)) {
+        if (!earliest || d < earliest) earliest = d;
+        if (!latest   || d > latest)   latest   = d;
+      }
+    }
+
+    // Annualize: scale to 12 months based on the date range in the CSV
+    let factor = 1.0;
+    let rangeLabel = "Your Annualized Spending";
+    if (earliest && latest) {
+      const days = Math.max(1, (latest - earliest) / (1000 * 60 * 60 * 24));
+      factor = 365 / days;
+      const months = Math.round(days / 30);
+      rangeLabel = `Annualized from ~${months} month${months !== 1 ? "s" : ""} of data`;
+    }
+
+    const annualSpend = {};
+    for (const [cat, amt] of Object.entries(spendByCat)) {
+      annualSpend[cat] = Math.round(amt * factor);
+    }
+
+    // Show spending summary
+    const catLabels = {}, catIcons = {};
+    dashData.forEach(d => { catLabels[d.id] = d.label; catIcons[d.id] = d.icon; });
+
+    const sorted = Object.entries(annualSpend)
+      .filter(([, v]) => v >= 50)
+      .sort(([, a], [, b]) => b - a);
+
+    document.getElementById("upgrade-spend-title").textContent = rangeLabel;
+    document.getElementById("upgrade-spend-grid").innerHTML = sorted.map(([cat, amt]) => `
+      <div class="upgrade-spend-item">
+        <div class="upgrade-spend-cat">${catIcons[cat] || "💳"} ${esc(catLabels[cat] || cat)}</div>
+        <div class="upgrade-spend-amt">$${amt.toLocaleString()}/yr</div>
+      </div>`).join("") || "<div style='color:#aaa;font-size:0.82rem'>Nothing significant detected</div>";
+
+    document.getElementById("upgrade-spend-summary").className = "upgrade-spend-summary show";
+    document.getElementById("rec-list").innerHTML = `<div style="text-align:center;padding:20px;color:#888;font-size:0.85rem">Analyzing your spending…</div>`;
+    document.getElementById("upgrade-empty").style.display = "none";
+
+    // Call the recommendation API
+    fetch("/api/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spend: annualSpend }),
+    }).then(r => r.json()).then(renderRecommendations);
+  }
+
+  function renderRecommendations(results) {
+    const list = document.getElementById("rec-list");
+    if (!results || results.length === 0) {
+      document.getElementById("upgrade-empty").style.display = "block";
+      list.innerHTML = "";
+      return;
+    }
+
+    list.innerHTML = results.map(r => {
+      const isPositive = r.net_gain > 0;
+      const gainStr    = (isPositive ? "+" : (r.net_gain < 0 ? "-" : "")) + "$" + Math.abs(r.net_gain).toFixed(0);
+      const gainClass  = isPositive ? "positive" : "negative";
+      const cardClass  = isPositive ? "positive" : "neutral";
+
+      const feeChips = [
+        r.annual_fee > 0 ? `$${r.annual_fee} annual fee` : "No annual fee",
+        r.credits_value > 0 ? `$${r.credits_value} in credits` : null,
+        r.annual_fee > 0 ? `$${r.net_fee} net cost` : null,
+      ].filter(Boolean).map(t => `<span class="rec-fee-chip">${esc(t)}</span>`).join("");
+
+      const winsHtml = r.top_categories.length > 0
+        ? r.top_categories.map(w => `
+            <div class="rec-win-item">
+              <span class="rec-win-cat">${esc(w.icon)} ${esc(w.label)}</span>
+              <span class="rec-win-val"> +$${w.extra_value.toFixed(0)}/yr</span>
+            </div>`).join("")
+        : `<div class="rec-no-win">No significant wins over your current cards for this spending</div>`;
+
+      const upgradeNote = r.upgrade_from
+        ? `<div class="rec-upgrade-note">⚠️ This replaces your CSP — you can't hold both Sapphire cards at once</div>` : "";
+
+      return `
+        <div class="rec-card ${cardClass}">
+          <div class="rec-top">
+            <div class="rec-name" style="color:${esc(r.color)}">${esc(r.name)}</div>
+            <div class="rec-gain ${gainClass}">${esc(gainStr)}/yr</div>
+          </div>
+          <div class="rec-note">${esc(r.note)}</div>
+          <div class="rec-fee-row">${feeChips}</div>
+          <div class="rec-wins-title">${isPositive ? "Where you'd earn more:" : "vs your current setup:"}</div>
+          <div class="rec-wins">${winsHtml}</div>
+          ${upgradeNote}
+        </div>`;
+    }).join("");
+  }
+
+  // ── Partners / Transfer News ──────────────────────────────────────────────
+
+  function loadRentDayCountdown() {
+    const today = new Date();
+    const day   = today.getDate();
+    let daysLeft;
+    if (day === 1) {
+      daysLeft = 0;
+    } else {
+      const nextFirst = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+      daysLeft = Math.ceil((nextFirst - today) / (1000 * 60 * 60 * 24));
+    }
+    const numEl = document.getElementById("rent-day-num");
+    if (!numEl) return;
+    if (daysLeft === 0) {
+      numEl.textContent = "🎉";
+      numEl.nextElementSibling.textContent = "TODAY!";
+      const box = document.getElementById("rent-day-box");
+      if (box) { box.style.borderColor = "#6c3fc4"; box.style.background = "#f5f0ff"; }
+    } else {
+      numEl.textContent = daysLeft;
+    }
+  }
+
+  async function loadTransferNews(force = false) {
+    const metaEl = document.getElementById("news-meta");
+    if (metaEl) metaEl.textContent = "Fetching…";
+
+    let data;
+    try {
+      const url = force ? "/api/transfer-news?refresh=1" : "/api/transfer-news";
+      data = await fetch(url).then(r => r.json());
+    } catch (e) {
+      document.getElementById("news-list").innerHTML =
+        `<div class="news-empty">Couldn't load right now — try refreshing.</div>`;
+      if (metaEl) metaEl.textContent = "Failed";
+      return;
+    }
+
+    const articles = data.articles || [];
+    if (metaEl) {
+      metaEl.textContent = data.cached ? "cached" : "just fetched";
+    }
+
+    const list = document.getElementById("news-list");
+    if (articles.length === 0) {
+      list.innerHTML = `<div class="news-empty">No transfer bonus articles found right now. Check back later.</div>`;
+      return;
+    }
+
+    const sevenDaysAgo = Date.now() / 1000 - 7 * 86400;
+    const bonusArticles = articles.filter(a => a.bonus_partner);
+    const otherArticles = articles.filter(a => !a.bonus_partner);
+
+    let html = "";
+
+    if (bonusArticles.length > 0) {
+      html += `<div class="bonus-grid">`;
+      html += bonusArticles.map(a => {
+        const isFresh = a.pub_ts && a.pub_ts > sevenDaysAgo;
+        const pctHtml = a.bonus_pct
+          ? `<span class="bonus-pct">+${esc(a.bonus_pct)}</span>`
+          : `<span class="bonus-pct unknown">See offer</span>`;
+        return `
+          <div class="bonus-card ${isFresh ? 'fresh' : ''}">
+            <div class="bonus-card-top">
+              <div class="bonus-partner">${esc(a.bonus_partner)}</div>
+              ${pctHtml}
+            </div>
+            <div class="bonus-article-title">
+              <a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.title)}</a>
+            </div>
+            <div class="bonus-footer">
+              <span class="bonus-source-date">${esc(a.source)} · ${esc(a.pub_date)}</span>
+            </div>
+          </div>`;
+      }).join("");
+      html += `</div>`;
+    } else {
+      html += `<div class="news-empty">No active transfer bonuses detected in the last 21 days.</div>`;
+    }
+
+    list.innerHTML = html;
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
     loadDashboard();
     populateCategoryDropdown();
     loadDiscoverTracker();
+    loadTransferNews();
+    loadRentDayCountdown();
 
     // Show install banner on iPhone Safari only (not already installed as PWA)
     const isIOS     = /iphone|ipad|ipod/i.test(navigator.userAgent);
